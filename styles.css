@@ -1,0 +1,186 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #ffffff; 
+    color: #333;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background-color: white; 
+    color: #4b29a3;
+}
+
+.logo img {
+    height: 40px;
+}
+
+.main-nav {
+    margin-left: 20px;
+    display: flex;
+}
+
+.main-nav a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+
+.user-profile {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background-color: #4b29a3; 
+    color: white;
+}
+
+.search-bar select,
+.search-bar input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+.breadcrumb {
+    margin: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.breadcrumb a {
+    text-decoration: none;
+    color: #4b29a3;
+}
+
+.profile-container {
+    display: flex;
+    padding: 20px;
+    background-color: #ffffff; 
+}
+
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background-color: #ffffff; 
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-right: 20px;
+}
+
+.profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.sidebar p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    display: block;
+    padding: 10px;
+    color: #4b29a3;
+    text-decoration: none;
+    font-weight: bold;
+    text-align: left;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: #f4f4f9;
+}
+
+.menu-item:hover {
+    background-color: #eaeaf5;
+}
+
+.account-info {
+    flex: 1;
+    padding: 20px;
+    background-color: #ffffff; 
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.account-info h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.required {
+    color: red;
+}
+
+input {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%; 
+}
+
+.submit-btn {
+    background-color: #4b29a3;
+    color: #ffffff;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+    text-transform: uppercase;
+}
+
+.submit-btn:hover {
+    background-color: #3a2085;
+}
+
