@@ -60,6 +60,15 @@ function addToCart($productId, $cartId) {
 
 $sql = "SELECT * FROM products WHERE category = 'tools'";
 $result = $conn->query($sql);
+if (isset($_GET['search'])) {
+    $searchQuery = $_GET['search'];
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
+    $result = $conn->query($sql);
+} 
+if (isset($_GET['view-all'])) {
+    $sql = "SELECT * FROM products";
+    $result = $conn->query($sql);
+}
 ?>
 
 <!DOCTYPE html>
@@ -68,52 +77,107 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toys</title>
+    <script>
+        function redirectToCategory(selectElement) {
+            const selectedValue = selectElement.value;
+            if (selectedValue) {
+                window.location.href = selectedValue; 
+            }
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
     <style>
 
-        .dropdown {
+.dropdown {
         position: relative;
         display: inline-block;
-        }
+    }
 
-        .dropdown-content {
+
+    .dropdown-content {
         display: none;
         position: absolute;
         background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
         min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
         z-index: 1;
-        }
+    }
 
-        .dropdown-content a {
+    .dropdown-content a {
         color: black;
         padding: 12px 16px;
         text-decoration: none;
         display: block;
-        }
+        font-size: 14px;
+    }
 
-        .dropdown-content a:hover {background-color: #f1f1f1}
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
 
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropbtn {
-            position: relative;
-            display: inline-block;
-            font-weight: bold;
-            text-decoration: none;
-            color: black;
-        }
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .search-bar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        background-color: #E7EAF6; 
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-category, .search-input, .search-btn {
+        padding: 10px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .search-category {
+        width: 150px;
+    }
+
+    .search-input {
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .search-btn {
+        background-color: #ffffff; 
+        color: black; 
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        border: 1px solid #6b24b7;
+    }
+
+    .search-btn:hover {
+        background-color: #4a1783; 
+        color: #ffffff;
+    }
+    .user-profile {
+    margin-left: 50px; 
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
 
         
     </style>
 </head>
 <body>
 <header>
-    <div class="logo">
-        <img src="logo.jpg" alt="QuillBox Logo">
-    </div>
-    <nav class="main-nav">
+        <div class="logo">
+            <img src="logo.jpg" alt="QuillBox Logo">
+        </div>
+        <nav class="main-nav">
         <a href="homepage.php">Home</a>
         <div class="dropdown">
             <span><strong>Products</strong></span>
@@ -124,11 +188,28 @@ $result = $conn->query($sql);
             </div>
         </div>
         <a href="cart.php">Cart</a>
+        <a href="log-in.php">Logout</a>
     </nav>
-    <div class="user-profile">
-        <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-        <div class="user-icon"><a href="profile.php">👤</a></div>
-</header>
+
+    <div class="search-bar-container">
+        <form method="GET" action="">
+            <select name="category" class="search-category" onchange="redirectToCategory(this)">
+                <option value="">All Categories</option>
+                <option value="toy.php">Toys</option>
+                <option value="clothes.php">Clothes</option>
+                <option value="tools.php">Tools</option>
+            </select>
+            <input type="text" name="search" placeholder="Search anything..." class="search-input">
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </div>
+
+
+        <div class="user-profile">
+            <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <div class="user-icon"><a href="profile.php">👤</a></div>
+        </div>
+    </header>    
 
     <main>
         <section class="product-section">

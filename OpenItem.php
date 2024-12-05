@@ -48,6 +48,19 @@ function addToCart($productId) {
     }
   }
 
+$sql = "SELECT * FROM products";
+$result = $conn->query($sql);
+
+if (isset($_POST['search'])) {
+    $searchQuery = $_POST['search'];
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
+    $result = $conn->query($sql);
+} 
+if (isset($_POST['view-all'])) {
+    $sql = "SELECT * FROM products";
+    $result = $conn->query($sql);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -57,38 +70,158 @@ function addToCart($productId) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenItem</title>
+    <script>
+        function redirectToCategory(selectElement) {
+            const selectedValue = selectElement.value;
+            if (selectedValue) {
+                window.location.href = selectedValue; 
+            }
+        }
+    </script>
     <link rel="stylesheet" href="styless.css">
+    <style>
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .search-bar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        background-color: #E7EAF6; 
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-category, .search-input, .search-btn {
+        padding: 10px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .search-category {
+        width: 150px;
+    }
+
+    .search-input {
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .search-btn {
+        background-color: #ffffff; 
+        color: black; 
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        border: 1px solid #6b24b7;
+    }
+
+    .search-btn:hover {
+        background-color: #4a1783; 
+        color: #ffffff;
+    }
+    .user-profile {
+    margin-left: 50px; 
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 40px;
+}
+
+.logo img {
+    height: 100px;
+    margin-right: 10px;
+}
+.main-nav {
+    display: flex;
+    gap: 20px;
+    margin-right: auto;
+}
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.main-nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+</style>
 </head>
 <body>
 
     <header>
-        <div class="navbar">
-            <div class="navbar-left">
-                <img src="logo.jpg" alt="Logo">
+    <div class="logo">
+            <img src="logo.jpg" alt="QuillBox Logo">
+        </div>
+        <nav class="main-nav">
+        <a href="homepage.php">Home</a>
+        <div class="dropdown">
+            <span><strong>Products</strong></span>
+            <div class="dropdown-content">
+                <a href="toy.php">Toys</a>
+                <a href="clothes.php">Clothes</a>
+                <a href="tools.php">Tools</a>
             </div>
-            <div class="main-nav">
-                <a href="homepage.php">Homes </a>
-                <a >Products </a>
-                <a href="cart.php">Cart </a>
-            </div>
-            <div class="user-profile">
-                <span>Welcome, New User</span>
-                <div class="user-icon"><a href="profile.php">👤</a></div>
-            </div>
+        </div>
+        <a href="cart.php">Cart</a>
+        <a href="log-in.php">Logout</a>
+    </nav>
+
+
+
+        <div class="user-profile">
+            <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <div class="user-icon"><a href="profile.php">👤</a></div>
         </div>
     </header>
-
-    <header2>
-        <div class="search-bar">
-            <select>
-                <option>All Categories</option>
-            </select>
-            <input type="text" placeholder="Search anything...">
-            <button>
-                <img src="search.png" alt="Search Icon">
-            </button>
-        </div>
-    </header2>
 
     <main>
         <div class="container">

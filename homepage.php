@@ -61,16 +61,15 @@ function addToCart($productId, $cartId) {
 $sql = "SELECT * FROM products";
 $result = $conn->query($sql);
 
-if (isset($_POST['search'])) {
-    $searchQuery = $_POST['search'];
-    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%'";
+if (isset($_GET['search'])) {
+    $searchQuery = $_GET['search'];
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
     $result = $conn->query($sql);
 } 
-if (isset($_POST['view-all'])) {
+if (isset($_GET['view-all'])) {
     $sql = "SELECT * FROM products";
     $result = $conn->query($sql);
 }
-
 
 ?>
 
@@ -80,12 +79,21 @@ if (isset($_POST['view-all'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    <script>
+        function redirectToCategory(selectElement) {
+            const selectedValue = selectElement.value;
+            if (selectedValue) {
+                window.location.href = selectedValue; 
+            }
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
     <style>
     .dropdown {
         position: relative;
         display: inline-block;
     }
+
 
     .dropdown-content {
         display: none;
@@ -183,12 +191,12 @@ if (isset($_POST['view-all'])) {
     </nav>
 
     <div class="search-bar-container">
-        <form method="POST" action="">
-            <select name="category" class="search-category">
+        <form method="GET" action="">
+            <select name="category" class="search-category" onchange="redirectToCategory(this)">
                 <option value="">All Categories</option>
-                <option value="toy">Toys</option>
-                <option value="clothes">Clothes</option>
-                <option value="tools">Tools</option>
+                <option value="toy.php">Toys</option>
+                <option value="clothes.php">Clothes</option>
+                <option value="tools.php">Tools</option>
             </select>
             <input type="text" name="search" placeholder="Search anything..." class="search-input">
             <button type="submit" class="search-btn">Search</button>
