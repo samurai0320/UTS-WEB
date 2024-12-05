@@ -81,33 +81,87 @@ if (isset($_POST['view-all'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="style.css">
-    <style> 
-        .dropdown {
+    <style>
+    .dropdown {
         position: relative;
         display: inline-block;
-        }
+    }
 
-        .dropdown-content {
+    .dropdown-content {
         display: none;
         position: absolute;
         background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
         min-width: 160px;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
         z-index: 1;
-        }
+    }
 
-        .dropdown-content a {
+    .dropdown-content a {
         color: black;
         padding: 12px 16px;
         text-decoration: none;
         display: block;
-        }
+        font-size: 14px;
+    }
 
-        .dropdown-content a:hover {background-color: #f1f1f1}
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
 
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-    </style>
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .search-bar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        background-color: #E7EAF6; 
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-category, .search-input, .search-btn {
+        padding: 10px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .search-category {
+        width: 150px;
+    }
+
+    .search-input {
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .search-btn {
+        background-color: #ffffff; 
+        color: black; 
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        border: 1px solid #6b24b7;
+    }
+
+    .search-btn:hover {
+        background-color: #4a1783; 
+        color: #ffffff;
+    }
+    .user-profile {
+    margin-left: 50px; 
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
+</style>
 </head>
 <body>
     <header>
@@ -128,10 +182,19 @@ if (isset($_POST['view-all'])) {
         <a href="logout.php">Logout</a>
     </nav>
 
+    <div class="search-bar-container">
         <form method="POST" action="">
-    <input type="text" name="search" placeholder="Search products...">
-    <button type="submit">Search</button>
-</form>
+            <select name="category" class="search-category">
+                <option value="">All Categories</option>
+                <option value="toy">Toys</option>
+                <option value="clothes">Clothes</option>
+                <option value="tools">Tools</option>
+            </select>
+            <input type="text" name="search" placeholder="Search anything..." class="search-input">
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </div>
+
 
         <div class="user-profile">
             <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
