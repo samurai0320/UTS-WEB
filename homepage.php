@@ -179,7 +179,7 @@ if (isset($_POST['view-all'])) {
             </div>
         </div>
         <a href="cart.php">Cart</a>
-        <a href="logout.php">Logout</a>
+        <a href="log-in.php">Logout</a>
     </nav>
 
     <div class="search-bar-container">
