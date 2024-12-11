@@ -89,14 +89,8 @@ if (isset($_POST['view-all'])) {
     </header>
 
     <div class="search-bar">
-        <select onchange="redirectToCategory(this)">
-            <option value="homepage.php">all Categories</option>
-            <option value="toy.php">Toys</option>
-            <option value="clothes.php">clothes</option>
-            <option value="tools.php">tools</option>
-            
-        </select>
-        <input type="text" placeholder="Search anything...">
+        
+        
     </div>
 
     <main class="profile-page">
@@ -109,7 +103,9 @@ if (isset($_POST['view-all'])) {
                 <img src="ayaka.jpg" alt="User Profile Picture" class="profile-pic">
                 <h2><?php echo $username; ?></h2>
                 <p><?php echo $email; ?></p>
-                <a class="menu-item">Account info</a>
+                <a class="menu-item" href="profile.php">Account info</a>
+                <a class="menu-item" href="wishlist.php">wishlist</a>
+                <a class="menu-item" href="orders.php">orders</a>
                 <a class="menu-item" href="log-in.php">Logout</a>
             </div>
 

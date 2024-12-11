@@ -2,7 +2,6 @@
 include 'donnection.php'; 
 session_start();
 
-
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
     exit;
@@ -10,19 +9,18 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
-
+// Fetch the user's name
 $sql = "SELECT username FROM users WHERE user_id = '$userId'";
 $result = $conn->query($sql);
 $usernames = $result->fetch_assoc()['username'];
 $_SESSION['username'] = $usernames;
 
-
+// Check if the user has a cart, if not create one
 $sql = "SELECT cart_id FROM cart WHERE user_id = '$userId'";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
 
 if (!$row) {
-    
     $sql = "INSERT INTO cart (user_id) VALUES ('$userId')";
     if ($conn->query($sql) === TRUE) {
         $cartId = $conn->insert_id; 
@@ -31,15 +29,40 @@ if (!$row) {
         exit();
     }
 } else {
-    
     $cartId = $row['cart_id'];
 }
 
+// Check if the user has a wishlist, if not create one
+$sql = "SELECT wishlist_id FROM wishlist WHERE user_id = '$userId'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
 
+if (!$row) {
+    // If no wishlist exists for the user, create a new one
+    $sql = "INSERT INTO wishlist (user_id) VALUES ('$userId')";
+    if ($conn->query($sql) === TRUE) {
+        // Get the ID of the newly created wishlist
+        $wishlistId = $conn->insert_id; 
+    } else {
+        echo "Error creating wishlist: " . $conn->error;
+        exit();
+    }
+} else {
+    // If wishlist already exists, fetch the existing wishlist ID
+    $wishlistId = $row['wishlist_id'];
+}
+
+// Check if an item is being added to the cart
 if (isset($_POST['add-to-cart'])) {
     addToCart($_POST['productId'], $cartId);
 }
 
+// Check if an item is being added/removed from the wishlist
+if (isset($_POST['toggle-wishlist'])) {
+    toggleWishlist($_POST['productId'], $wishlistId);
+}
+
+// Function to add item to cart
 function addToCart($productId, $cartId) {
     include 'donnection.php';
     
@@ -47,30 +70,49 @@ function addToCart($productId, $cartId) {
     $result = $conn->query($sql);
   
     if ($result->num_rows > 0) {
-        
         $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = '$cartId' AND productid = '$productId'";
         $conn->query($sql);
     } else {
-        
         $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES ('$cartId', '$productId', 1)";
         $conn->query($sql);
     }
 }
 
+// Function to toggle the wishlist
+function toggleWishlist($productId, $wishlistId) {
+    include 'donnection.php';
+    
+    // Check if the product is already in the user's wishlist
+    $sql = "SELECT * FROM wishlist_item WHERE wishlistid = '$wishlistId' AND productid = '$productId'";
+    $result = $conn->query($sql);
 
+    // If the item is in the wishlist, remove it
+    if ($result->num_rows > 0) {
+        $sql = "DELETE FROM wishlist_item WHERE wishlistid = '$wishlistId' AND productid = '$productId'";  // Use $wishlistId instead of $userId
+        $conn->query($sql);
+    } else {
+        // If not, add the item to the wishlist
+        $sql = "INSERT INTO wishlist_item (wishlistid, productid) VALUES ('$wishlistId', '$productId')";  // Use $wishlistId
+        $conn->query($sql);
+    }
+}
+
+// Fetch all products from the database
 $sql = "SELECT * FROM products";
 $result = $conn->query($sql);
 
+// Perform search if search query is set
 if (isset($_GET['search'])) {
     $searchQuery = $_GET['search'];
-    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; 
     $result = $conn->query($sql);
 } 
+
+// Show all products if 'view-all' is clicked
 if (isset($_GET['view-all'])) {
     $sql = "SELECT * FROM products";
     $result = $conn->query($sql);
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -86,14 +128,51 @@ if (isset($_GET['view-all'])) {
                 window.location.href = selectedValue; 
             }
         }
+
+        function toggleWishlist(productId, element) {
+            const formData = new FormData();
+            formData.append('toggle-wishlist', true);
+            formData.append('productId', productId);
+
+            fetch('', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    element.classList.toggle('wishlist-active');
+                }
+            });
+        }
     </script>
     <link rel="stylesheet" href="style.css">
     <style>
+    .product-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .wishlist {
+        font-size: 50px;
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.3s ease;
+        margin-bottom: 10px;
+    }
+
+    .wishlist.wishlist-active {
+        color: #ff4081;
+    }
+
+    .add-to-cart {
+        margin-top: 10px;
+    }
+
     .dropdown {
         position: relative;
         display: inline-block;
     }
-
 
     .dropdown-content {
         display: none;
@@ -162,14 +241,15 @@ if (isset($_GET['view-all'])) {
         background-color: #4a1783; 
         color: #ffffff;
     }
+
     .user-profile {
-    margin-left: 50px; 
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 20px;
-}
-</style>
+        margin-left: 50px; 
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 20px;
+    }
+    </style>
 </head>
 <body>
     <header>
@@ -203,7 +283,6 @@ if (isset($_GET['view-all'])) {
         </form>
     </div>
 
-
         <div class="user-profile">
             <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
             <div class="user-icon"><a href="profile.php">👤</a></div>
@@ -217,6 +296,11 @@ if (isset($_GET['view-all'])) {
                 <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
+                        
+                        // Check if the product is already in the user's wishlist
+                        $isInWishlist = $conn->query("SELECT * FROM wishlist_item WHERE wishlistid = '$wishlistId' AND productid = '{$row['id']}'")->num_rows > 0;
+                        $wishlistClass = $isInWishlist ? 'wishlist wishlist-active' : 'wishlist';
+
                         echo '<div class="product-card">';
                         echo '<a href="OpenItem.php?productId=' . $row['id'] . '">';
                         echo '<img src="' . $row['image'] . '" alt="' . htmlspecialchars($row['name']) . '">';
@@ -225,6 +309,7 @@ if (isset($_GET['view-all'])) {
                         echo '<p>Harga satu set</p>';
                         echo '<p>Qty: ' . htmlspecialchars($row['quantity']) . '</p>';
                         echo '<p class="price">Rp' . htmlspecialchars($row['price']) . '</p>';
+                        echo '<span class="' . $wishlistClass . '" onclick="toggleWishlist(' . $row['id'] . ', this)">&#9825;</span>';
                         echo '<form action="" method="post">';
                         echo '<input type="hidden" name="productId" value="' . $row['id'] . '">';
                         echo '<button type="submit" class="add-to-cart" name="add-to-cart">Add to Cart</button>';
@@ -246,3 +331,5 @@ if (isset($_GET['view-all'])) {
 <?php
 $conn->close(); 
 ?>
+
+
