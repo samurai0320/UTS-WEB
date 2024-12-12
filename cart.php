@@ -68,55 +68,79 @@ while ($row = $result->fetch_assoc()) {
 </nav>
 
 <div class="container">
-    <div class="cart-items">
-        <?php $totalSubtotal = 0; ?>
-        <?php foreach ($cartItems as $item) { ?>
-            <div class="cart-item">
-                <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="Product Image">
-                <div class="item-details">
-                    <h3><?php echo $item['name']; ?></h3>
-                    <p>Rp<?php echo $item['price']; ?></p>
-                    <div class="quantity-control">
-                        <?php
-                        $subtotal = $item['price'] * $item['cart_quantity'];
-                        $totalSubtotal += $subtotal;
-                        if ($item['cart_quantity'] > 1) {
-                            echo '<form action="" method="post">';
-                            echo '<input type="hidden" name="cartId" value="' . $cartId . '">';
-                            echo '<input type="hidden" name="productId" value="' . $item['id'] . '">';
-                            echo '<input type="hidden" name="quantity" value="' . ($item['cart_quantity'] - 1) . '">';
-                            echo '<button type="submit" name="updateQuantity">-</button>';
-                            echo '</form>';
-                        } else {
-                            echo '<form action="" method="post">';
-                            echo '<input type="hidden" name="cartId" value="' . $cartId . '">';
-                            echo '<input type="hidden" name="productId" value="' . $item['id'] . '">';
-                            echo '<input type="hidden" name="quantity" value="0">';
-                            echo '<button type="submit" name="updateQuantity">-</button>';
-                            echo '</form>';
-                        }
-                        ?>
-                        <input type="text" value="<?php echo $item['cart_quantity']; ?>">
-                        <?php
+<div class="cart-items">
+    <?php $totalSubtotal = 0; ?>
+    <?php foreach ($cartItems as $item) { ?>
+        <div class="cart-item">
+            <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="Product Image">
+            <div class="item-details">
+                <h3><?php echo $item['name']; ?></h3>
+                <p>Rp<?php echo $item['price']; ?></p>
+                <div class="quantity-control">
+                    <?php
+                    $subtotal = $item['price'] * $item['cart_quantity'];
+                    $totalSubtotal += $subtotal;
+                    if ($item['cart_quantity'] > 1) {
                         echo '<form action="" method="post">';
                         echo '<input type="hidden" name="cartId" value="' . $cartId . '">';
                         echo '<input type="hidden" name="productId" value="' . $item['id'] . '">';
-                        echo '<input type="hidden" name="quantity" value="' . ($item['cart_quantity'] + 1) . '">';
-                        echo '<button type="submit" name="updateQuantity">+</button>';
+                        echo '<input type="hidden" name="quantity" value="' . ($item['cart_quantity'] - 1) . '">';
+                        echo '<button type="submit" name="updateQuantity">-</button>';
                         echo '</form>';
-                        ?>
-                    </div>
+                    } else {
+                        echo '<form action="" method="post">';
+                        echo '<input type="hidden" name="cartId" value="' . $cartId . '">';
+                        echo '<input type="hidden" name="productId" value="' . $item['id'] . '">';
+                        echo '<input type="hidden" name="quantity" value="0">';
+                        echo '<button type="submit" name="updateQuantity">-</button>';
+                        echo '</form>';
+                    }
+                    ?>
+                    <input type="text" value="<?php echo $item['cart_quantity']; ?>">
+                    <?php
+                    echo '<form action="" method="post">';
+                    echo '<input type="hidden" name="cartId" value="' . $cartId . '">';
+                    echo '<input type="hidden" name="productId" value="' . $item['id'] . '">';
+                    echo '<input type="hidden" name="quantity" value="' . ($item['cart_quantity'] + 1) . '">';
+                    echo '<button type="submit" name="updateQuantity">+</button>';
+                    echo '</form>';
+                    ?>
+                    <input type="checkbox" name="selectedItems[]" value="<?php echo $item['id']; ?>" onchange="updateSelectedItems(this)">
+
                 </div>
             </div>
-        <?php } ?>
-    </div>
-
-    <div class="order-summary">
-        <h3>Order Summary</h3>
-        <p>Sub Total: <span>Rp<?php echo $totalSubtotal; ?></span></p>
-        <p>Shipping estimate: <span>Rp25.000</span></p>
-        <p>Tax estimate: <span>Rp12.000</span></p>
-        <p><strong>ORDER TOTAL: <span>Rp<?php echo $totalSubtotal + 25000 + 12000; ?></strong></span></p>
-        <a href="checkout.php" style="background-color: #4B3EC4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">CHECKOUT</a>
-    </div>
+        </div>
+    <?php } ?>
 </div>
+
+<div class="order-summary">
+    <h3>Order Summary</h3>
+    <p>Sub Total: <span>Rp<?php echo $totalSubtotal; ?></span></p>
+    <p>Shipping estimate: <span>Rp25.000</span></p>
+    <p>Tax estimate: <span>Rp12.000</span></p>
+    <p><strong>ORDER TOTAL: <span>Rp<?php echo $totalSubtotal + 25000 + 12000; ?></strong></span></p>
+    <form action="checkout.php" method="post" id="checkoutForm">
+    <input type="hidden" name="selectedItems" id="selectedItems">
+    <button type="submit" style="background-color: #4B3EC4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">CHECKOUT</button>
+</form>
+<script>
+
+    let selectedItems = [];
+
+    function updateSelectedItems(checkbox) {
+        const itemId = checkbox.value;
+
+        if (checkbox.checked) {
+            if (!selectedItems.includes(itemId)) {
+                selectedItems.push(itemId);
+            }
+        } else {
+            selectedItems = selectedItems.filter(id => id !== itemId);
+        }
+
+        document.getElementById('selectedItems').value = selectedItems.join(',');
+    }
+</script>
+</div>
+</div>
+</html>

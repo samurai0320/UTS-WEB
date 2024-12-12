@@ -2,6 +2,23 @@
 include 'donnection.php'; 
 session_start();
 
+if (!empty($_POST['selectedItems'])) {
+  $selectedItems = explode(',', $_POST['selectedItems']);
+} elseif (!empty($_SESSION['selectedItems'])) {
+  $selectedItems = $_SESSION['selectedItems'];
+} else {
+  $selectedItems = [];
+}
+$totalQuantity = 0;
+$totalSubtotal = 0;
+
+echo "Selected Items (raw): ";
+echo $_POST['selectedItems'];
+
+$selectedItems = explode(',', $_POST['selectedItems']);
+echo "Selected Items (array): ";
+print_r($selectedItems);
+
 
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
@@ -9,36 +26,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
-
-
-$sql = "SELECT username FROM users WHERE user_id = '$userId'";
-$result = $conn->query($sql);
-$usernames = $result->fetch_assoc()['username'];
-$_SESSION['username'] = $usernames;
-
-
-$sql = "SELECT cart_id FROM cart WHERE user_id = '$userId'";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
-
-if (!$row) {
-    
-    $sql = "INSERT INTO cart (user_id) VALUES ('$userId')";
-    if ($conn->query($sql) === TRUE) {
-        $cartId = $conn->insert_id; 
-    } else {
-        echo "Error creating cart: " . $conn->error;
-        exit();
-    }
-} else {
-    
-    $cartId = $row['cart_id'];
-}
-
-
-if (isset($_POST['add-to-cart'])) {
-    addToCart($_POST['productId'], $cartId);
-}
 
 function addToCart($productId, $cartId) {
     include 'donnection.php';
@@ -207,16 +194,16 @@ if (isset($_GET['view-all'])) {
 }
   </style>
   <script>
-    function updateShippingCost() {
-      const shippingSelect = document.getElementById('shipping-options');
-      const shippingCost = parseInt(shippingSelect.value);
-      const subTotal = 575000; 
-      const couponDiscount = 35000;
-      const totalElement = document.getElementById('order-total');
+function updateShippingCost() {
+    const shippingSelect = document.getElementById('shipping-options');
+    const shippingCost = parseInt(shippingSelect.value, 10);
+    const subTotal = parseInt(document.getElementById('subtotal').getAttribute('data-value'), 10);
+    const couponDiscount = 35000; // Example static value
+    const totalElement = document.getElementById('order-total');
 
-      const newTotal = subTotal - couponDiscount + shippingCost;
-      totalElement.textContent = Rp${newTotal.toLocaleString()};
-    }
+    const newTotal = subTotal - couponDiscount + shippingCost;
+    totalElement.textContent = `Rp${newTotal.toLocaleString()}`;
+}
   </script>
 </head>
 <body>
@@ -267,25 +254,34 @@ if (isset($_GET['view-all'])) {
         <!-- Item Details -->
         <div class="card mb-4">
           <h5>Item Detail</h5>
-          <!-- Item 1 -->
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <img src="path/to/binder-image.jpg" alt="Binder" class="img-thumbnail">
-            <div>
-              <p class="mb-0">Binder Kulit A5 Custom Nama</p>
-              <p class="text-muted mb-0">Rp130.000 x3</p>
-            </div>
-            <button class="btn btn-danger btn-sm">Remove</button>
-          </div>
-          <!-- Item 2 -->
-          <div class="d-flex align-items-center justify-content-between">
-            <img src="path/to/tape-image.jpg" alt="Washi Tape" class="img-thumbnail">
-            <div>
-              <p class="mb-0">Pack Set Washi Tape Masking</p>
-              <p class="text-muted mb-0">Rp185.000 x1</p>
-            </div>
-            <button class="btn btn-danger btn-sm">Remove</button>
-          </div>
-        </div>
+          <?php
+
+          foreach ($selectedItems as $itemId) {
+            $sql = "SELECT p.*, ci.cart_quantity 
+                    FROM products p 
+                    JOIN cart_item ci ON p.id = ci.productid 
+                    WHERE p.id = '$itemId' AND ci.cartid = '$userId'";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+                $product = $result->fetch_assoc();
+                
+                $subtotal = $product['price'] * $product['cart_quantity'];
+
+                $totalQuantity += $product['cart_quantity'];
+                $totalSubtotal += $subtotal;
+                echo "<div class='d-flex align-items-center justify-content-between mb-3'>";
+                echo "<img src='" . htmlspecialchars($product['image']) . "' alt='Product Image' class='img-thumbnail'>";
+                echo "<div>";
+                echo "<p class='mb-0'>" . htmlspecialchars($product['name']) . "</p>";
+                echo "<p class='text-muted mb-0'>" . number_format($product['price'], 0, ',', '.') . " x " . $product['cart_quantity'] . "</p>";
+                echo "</div>";
+                echo "<button class='remove-item btn btn-danger btn-sm' data-item-id='" . $itemId . "'>Remove</button>";
+                echo "</div>";
+            } else {
+                echo "<p>No product found for ID $itemId.</p>";
+            }
+          }?>
 
         <!-- Additional Info -->
         <div class="mb-4">
@@ -309,28 +305,37 @@ if (isset($_GET['view-all'])) {
 
           <!-- Order Summary -->
           <div class="order-summary mb-4">
-            <div class="d-flex justify-content-between">
-              <p>Sub Total</p>
-              <p>Rp575.000</p>
-            </div>
-            <div class="d-flex justify-content-between">
-              <p>Coupon</p>
-              <p>-Rp35.000</p>
-            </div>
-            <div class="d-flex justify-content-between align-items-center">
-              <p>Shipping</p>
-              <select id="shipping-options" class="form-select" onchange="updateShippingCost()">
-                <option value="50000">Fast (Rp50.000)</option>
-                <option value="27000" selected>Regular (Rp27.000)</option>
-                <option value="10000">Hemat (Rp10.000)</option>
-              </select>
-            </div>
-            <hr>
-            <div class="d-flex justify-content-between order-total">
-              <p>Order Total</p>
-              <p id="order-total" class="text-success">Rp620.000</p>
-            </div>
-          </div>
+    <div class="d-flex justify-content-between">
+        <p>Sub Total</p>
+        <p id="subtotal" data-value="<?php echo $totalSubtotal; ?>">
+            Rp<?php echo number_format($totalSubtotal, 0, ',', '.'); ?>
+        </p>
+    </div>
+    <input type="hidden" id="subtotal-hidden" value="<?php echo $totalSubtotal; ?>">
+
+
+    <div class="d-flex justify-content-between">
+        <p>Coupon</p>
+        <p>-Rp35.000</p>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <p>Shipping</p>
+        <select id="shipping-options" class="form-select" onchange="updateShippingCost()">
+            <option value="50000">Fast (Rp50.000)</option>
+            <option value="27000" selected>Regular (Rp27.000)</option>
+            <option value="10000">Hemat (Rp10.000)</option>
+        </select>
+    </div>
+
+    <hr>
+    <div class="d-flex justify-content-between order-total">
+        <p>Order Total</p>
+        <p id="order-total" class="text-success">
+            Rp<?php echo number_format($totalSubtotal - 35000 + 27000, 0, ',', '.'); ?>
+        </p>
+    </div>
+</div>
 
           <!-- Payment Methods -->
           <div class="payment-methods mb-4">
@@ -365,5 +370,23 @@ if (isset($_GET['view-all'])) {
       </div>
     </div>
   </div>
+  <?php echo "<script>";
+echo "document.querySelectorAll('.remove-item').forEach(function(button) {";
+echo "button.addEventListener('click', function() {";
+echo "var itemId = button.getAttribute('data-item-id');";
+echo "var xhr = new XMLHttpRequest();";
+echo "xhr.open('POST', 'remove_item.php', true);";
+echo "xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');";
+echo "xhr.send('item_id=' + itemId);";
+echo "xhr.onload = function() {";
+echo "if (xhr.status === 200) {";
+echo "console.log('Item removed successfully');";
+echo "window.location.reload();";
+echo "}";
+echo "}";
+echo "});";
+echo "});";
+echo "</script>";
+?>
 </body>
 </html>
