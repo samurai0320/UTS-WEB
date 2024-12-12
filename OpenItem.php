@@ -16,6 +16,7 @@ $result = $conn->query($sql);
 $row = $result->fetch_assoc();
 $cartId = $row['cart_id'];
 
+
 function addToCart($productId) {
     include 'donnection.php';
     $sql = "SELECT cart_id FROM cart WHERE user_id = '".$_SESSION['user_id']."'";

@@ -12,12 +12,10 @@ if (!empty($_POST['selectedItems'])) {
 $totalQuantity = 0;
 $totalSubtotal = 0;
 
-echo "Selected Items (raw): ";
-echo $_POST['selectedItems'];
 
-$selectedItems = explode(',', $_POST['selectedItems']);
-echo "Selected Items (array): ";
-print_r($selectedItems);
+
+
+
 
 
 if (!isset($_SESSION['user_id'])) {
@@ -26,7 +24,15 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
+$sqcart = "SELECT cart_id FROM cart WHERE user_id = '$userId';";
+$result = $conn->query($sqcart);
 
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $cartId = $row['cart_id'];
+} else {
+    echo "Cart ID not found for user ID: " . $userId;
+}
 function addToCart($productId, $cartId) {
     include 'donnection.php';
     
@@ -260,7 +266,7 @@ function updateShippingCost() {
             $sql = "SELECT p.*, ci.cart_quantity 
                     FROM products p 
                     JOIN cart_item ci ON p.id = ci.productid 
-                    WHERE p.id = '$itemId' AND ci.cartid = '$userId'";
+                    WHERE p.id = '$itemId' AND ci.cartid = '$cartId'";
             $result = $conn->query($sql);
 
             if ($result->num_rows > 0) {
