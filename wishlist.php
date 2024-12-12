@@ -6,6 +6,46 @@ if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
     exit;
 }
+$userId = $_SESSION['user_id'];
+$query = "SELECT * FROM users WHERE user_id = '$userId'";
+$result = mysqli_query($conn, $query);
+$data = mysqli_fetch_assoc($result);
+
+$username = $data['username'];
+$email = $data['email'];
+$full_name = $data['full_name'];
+$address = $data['address'];
+$city = $data['city'];
+$phone_number = $data['phone_number'];
+function updateAccountCredentials($username, $email, $password, $userId,$full_name, $address, $city, $phone_number) {
+    include 'donnection.php';
+
+  $sql = "UPDATE users SET username = '$username', full_name = '$full_name', address = '$address', city = '$city', phone_number = '$phone_number', email = '$email', password = '$password' WHERE user_id = '$userId'";
+  $conn->query($sql);
+
+  }
+  if (isset($_POST["submit-btn"])) {
+    include 'donnection.php';
+    $username = $_POST['username'];
+    $full_name = $_POST['full_name'];
+    $address = $_POST['address'];
+    $city = $_POST['city'];
+    $phone_number = $_POST['phone_number'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $userId = $_SESSION['user_id'];
+    updateAccountCredentials($username, $email,$full_name, $address, $city, $phone_number, $password, $userId);
+    $pass = "UPDATE users SET username = '$username', 
+                full_name = '$full_name', 
+                email = '$email', 
+                address = '$address', 
+                city = '$city', 
+                phone_number = '$phone_number', 
+                password = '$password' 
+            WHERE user_id = '$userId'";
+    $result= mysqli_query($conn, $pass);
+    $_SESSION['username'] = $username;
+  }
 
 $userId = $_SESSION['user_id'];
 
@@ -116,18 +156,18 @@ if (isset($_POST['updateQuantity'])) {
     }
 
     $sql = "SELECT SUM(p.price * ci.wishlist_quantity) AS total_subtotal FROM wishlist_item ci INNER JOIN products p ON ci.productid = p.id WHERE ci.wishlistid = '$wishlistId'";
-    $result = $conn->query($sql);
-    $row = $result->fetch_assoc();
+    $results = $conn->query($sql);
+    $row = $results->fetch_assoc();
     $totalSubtotal = $row['total_subtotal'];
 }
 
 $sql = "SELECT wishlist_id FROM wishlist WHERE user_id = '".$_SESSION['user_id']."'";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
+$results = $conn->query($sql);
+$row = $results->fetch_assoc();
 $cartId = $row['wishlist_id'];
 
-$sql = "SELECT ci.*, p.* FROM wishlist_item ci INNER JOIN products p ON ci.productid = p.id WHERE ci.wisshlistid = '$wishlistId'";
-$result = $conn->query($sql);
+$sql = "SELECT ci.*, p.* FROM wishlist_item ci INNER JOIN products p ON ci.productid = p.id WHERE ci.wishlistid = '$wishlistId'";
+$results = $conn->query($sql);
 $wishlistItems = array();
 while ($row = $result->fetch_assoc()) {
     $wishlistItems[] = $row;
@@ -174,28 +214,41 @@ if (isset($_GET['view-all'])) {
             <div class="user-icon">👤</div>
         </div>
     </header>
+    <div class="search-bar">
+        
+        
+    </div>
     
     <main class="wishlist-page">
         <nav class="breadcrumb">
             <a href="homepage.php">Home</a> / <a>Wishlist</a>
         </nav>
 
-        <section class="wishlist-container">
-            <div class="wishlist-items">
+        <section class="profile-container">
+            <div class="sidebar">
+                <img src="ayaka.jpg" alt="User Profile Picture" class="profile-pic">
+                <h2><?php echo $username; ?></h2>
+                <p><?php echo $email; ?></p>
+                <a class="menu-item" href="profile.php">Account info</a>
+                <a class="menu-item" href="wishlist.php">wishlist</a>
+                <a class="menu-item" href="orders.php">orders</a>
+                <a class="menu-item" href="log-in.php">Logout</a>
+            </div>
+
+        
+            <div class="account-info">
+                <h2>Wishlist</h2>
                 <?php 
                 
-                while ($row = mysqli_fetch_assoc($result)) { 
+                while ($row = mysqli_fetch_assoc($results)) { 
                 ?>
                     <div class="wishlist-item">
-                        <img src="<?php echo htmlspecialchars($row['product_image']); ?>" alt="Product Image">
+                        <img src="<?php echo htmlspecialchars($row['image']); ?>" alt="Product Image">
                         <div class="item-details">
-                            <h3><?php echo htmlspecialchars($row['product_name']); ?></h3>
-                            <p>Rp<?php echo number_format($row['product_price'], 0, ',', '.'); ?></p>
+                            <h3><?php echo htmlspecialchars($row['name']); ?></h3>
+                            <p>Rp<?php echo number_format($row['price'], 0, ',', '.'); ?></p>
                             <div class="quantity-control">
-                                <form action="remove_wishlist.php" method="post">
-                                    <input type="hidden" name="wishlistItemId" value="<?php echo $row['wishlist_item_id']; ?>">
-                                    <button type="submit" name="removeFromWishlist">Remove</button>
-                                </form>
+                            
                             </div>
                         </div>
                     </div>
