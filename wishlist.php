@@ -91,6 +91,22 @@ if (isset($_POST['toggle-wishlist'])) {
     toggleWishlist($_POST['productId'], $wishlistId);
 }
 
+function deleteFromWishlist($productId, $wishlistId) {
+    include 'donnection.php';
+    $sql = "DELETE FROM wishlist_item WHERE wishlistid = '$wishlistId' AND productid = '$productId'";
+    return $conn->query($sql);
+}
+
+
+if (isset($_POST['delete-wishlist'])) {
+    $productId = $_POST['productId'];
+
+    if (deleteFromWishlist($productId, $wishlistId)) {
+        
+    } else {
+        
+    }
+}
 function addToCart($productId, $cartId) {
     include 'donnection.php';
     $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
@@ -195,6 +211,18 @@ if (isset($_GET['view-all'])) {
 .add-to-cart:hover {
     background-color: #6b24b7;
 }
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
     </style>
 </head>
 <body>
@@ -240,6 +268,10 @@ if (isset($_GET['view-all'])) {
                                 <form action="" method="post">
                                     <input type="hidden" name="productId" value="<?php echo $row['id']; ?>">
                                     <button type="submit" class="add-to-cart" name="add-to-cart">Add to Cart</button>
+                                </form>
+                                <form action="" method="post" style="display: inline-block;">
+                                    <input type="hidden" name="productId" value="<?php echo $row['id']; ?>">
+                                    <button type="submit" name="delete-wishlist" class="delete-btn">Remove</button>
                                 </form>
                             </div>
                         </div>
