@@ -291,7 +291,7 @@ if (isset($_GET['view-all'])) {
 
     <main>
         <section class="product-section">
-            <h2>Everyday Items</h2>
+            <h2></h2>
             <div class="product-container">
                 <?php
                 if ($result->num_rows > 0) {
