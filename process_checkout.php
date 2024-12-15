@@ -1,5 +1,5 @@
 <?php
-include 'donnection.php';
+include 'donnection.php'; // Pastikan nama file sudah benar
 session_start();
 
 // Pastikan pengguna login
@@ -10,77 +10,77 @@ if (!isset($_SESSION['user_id'])) {
 
 // Ambil user ID dan data dari form
 $userId = $_SESSION['user_id'];
-$address = $_POST['address'];
-$orderNotes = $_POST['order_notes'];
-$paymentOption = $_POST['paymentOption'];
-$shippingCost = $_POST['shipping_options'];
+$address = $_POST['address'] ?? '';
+$orderNotes = $_POST['order_notes'] ?? '';
+$paymentOption = $_POST['paymentOption'] ?? '';
+$shippingCost = $_POST['shipping_options'] ?? 0;
+
+// Validasi input (pastikan tidak ada nilai kosong)
+if (empty($address) ) {
+    die("Alamat  harus diisi.");
+}
 
 // Dapatkan cart_id pengguna
-$sql = "SELECT cart_id FROM cart WHERE user_id = '$userId'";
-$result = $conn->query($sql);
+$sql = "SELECT cart_id FROM cart WHERE user_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
 $row = $result->fetch_assoc();
 if (!$row) {
-    die("Cart tidak ditemukan.");
+    die("Keranjang tidak ditemukan.");
 }
 $cartId = $row['cart_id'];
 
 // Ambil data item dari keranjang
-$sql = "SELECT * FROM cart_item WHERE cartid = '$cartId'";
-$result = $conn->query($sql);
+$sql = "SELECT ci.productid, ci.cart_quantity, p.price 
+        FROM cart_item ci 
+        JOIN products p ON ci.productid = p.id 
+        WHERE ci.cartid = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $cartId);
+$stmt->execute();
+$result = $stmt->get_result();
 
-if ($result->num_rows == 0) {
-    die("Keranjang kosong.");
-}
-
-// Hitung total order
-$subTotal = 0;
-$orderItems = [];
+$items = [];
+$totalAmount = 0;
 while ($item = $result->fetch_assoc()) {
-    $productId = $item['productid'];
-    $quantity = $item['cart_quantity'];
-
-    // Ambil harga produk
-    $sql = "SELECT price FROM products WHERE product_id = '$productId'";
-    $productResult = $conn->query($sql);
-    $product = $productResult->fetch_assoc();
-    $price = $product['price'];
-
-    $subTotal += $price * $quantity;
-    $orderItems[] = [
-        'product_id' => $productId,
-        'quantity' => $quantity,
-        'price' => $price
-    ];
+    $items[] = $item;
+    $totalAmount += $item['cart_quantity'] * $item['price'];
 }
 
-// Hitung total keseluruhan
-$couponDiscount = 35000; // Sesuai data checkout Anda
-$total = $subTotal - $couponDiscount + $shippingCost;
+// Tambahkan biaya pengiriman ke total
+$totalAmount += $shippingCost;
 
-// Simpan ke tabel `order`
-$sql = "INSERT INTO `order` (user_id, address, notes, payment_method, subtotal, discount, shipping_cost, total)
-        VALUES ('$userId', '$address', '$orderNotes', '$paymentOption', '$subTotal', '$couponDiscount', '$shippingCost', '$total')";
-if ($conn->query($sql) === TRUE) {
-    $orderId = $conn->insert_id;
+// Mulai transaksi
+$conn->begin_transaction();
+try {
+    // Insert ke tabel orders
+    $sql = "INSERT INTO orders (user_id, total_amount, order_date, status, address, information) 
+            VALUES (?, ?, NOW(), 'Pending', ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("idss", $userId, $totalAmount, $address, $orderNotes);
+    $stmt->execute();
+    
+    $orderId = $stmt->insert_id; // Dapatkan order_id terakhir
 
-    // Simpan ke tabel `order_items`
-    foreach ($orderItems as $item) {
-        $productId = $item['product_id'];
-        $quantity = $item['quantity'];
-        $price = $item['price'];
+    // Insert ke tabel order_items
+    $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
 
-        $sql = "INSERT INTO order_items (order_id, product_id, quantity, price)
-                VALUES ('$orderId', '$productId', '$quantity', '$price')";
-        $conn->query($sql);
+    foreach ($items as $item) {
+        $stmt->bind_param("iiid", $orderId, $item['productid'], $item['cart_quantity'], $item['price']);
+        $stmt->execute();
     }
 
-    // Kosongkan keranjang pengguna
-    $sql = "DELETE FROM cart_item WHERE cartid = '$cartId'";
-    $conn->query($sql);
+    // Commit transaksi
+    $conn->commit();
 
-    echo "Pesanan berhasil dibuat!";
-    header("location: order_success.php");
-} else {
-    echo "Error: " . $conn->error;
+    echo "Pesanan berhasil dibuat dengan ID: $orderId";
+
+} catch (Exception $e) {
+    // Rollback jika terjadi kesalahan
+    $conn->rollback();
+    die("Terjadi kesalahan: " . $e->getMessage());
 }
 ?>

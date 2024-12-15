@@ -59,6 +59,48 @@ if (isset($_GET['view-all'])) {
     $sql = "SELECT * FROM products";
     $result = $conn->query($sql);
 }
+$stmt = $conn->prepare('SELECT * FROM cart_item WHERE id = ?');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$cart_items = $result->fetch_all(MYSQLI_ASSOC);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+    $address = $_POST['address'];
+    $information = $_POST['information'];
+    $total_amount = 0;
+
+    // Calculate total amount
+    foreach ($cart_items as $item) {
+        $total_amount += $item['price'] * $item['quantity'];
+    }
+
+    // Insert into `order` table
+    $stmt = $conn->prepare('INSERT INTO `order` (user_id, total_amount, address, information) VALUES (?, ?, ?, ?)');
+    $stmt->bind_param('idss', $user_id, $total_amount, $address, $information);
+    $stmt->execute();
+    $order_id = $stmt->insert_id;
+
+    // Insert into `order_item` table
+    foreach ($cart_items as $item) {
+        $product_id = $item['id']; // Assuming `id` is product ID in `cart_items`
+        $quantity = $item['quantity'];
+        $price = $item['price'];
+
+        $stmt = $conn->prepare('INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
+        $stmt->bind_param('iiid', $order_id, $product_id, $quantity, $price);
+        $stmt->execute();
+    }
+
+    // Clear the cart
+    $stmt = $conn->prepare('DELETE FROM cart_items WHERE userid = ?');
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+
+    echo "Order placed successfully!";
+    header('Location: order_success.php');
+    exit;
+}
 
 ?>
 
@@ -321,103 +363,85 @@ function updateShippingCost() {
           }?>
 
         <!-- Additional Info -->
-        <div class="mb-4">
-          <label for="order-notes" class="form-label">Additional Information</label>
-          <textarea id="order-notes" class="form-control" rows="3" placeholder="Notes about your order..."></textarea>
-        </div>
+        <form method="POST" action="process_checkout.php">
+  <div class="mb-4">
+    <label for="order_notes" class="form-label">Additional Information</label>
+    <textarea id="order_notes" name="order_notes" class="form-control" rows="3" placeholder="Notes about your order..."></textarea>
+  </div>
 
-        <!-- Address -->
-        <div class="mb-4">
-          <label for="address" class="form-label">Your Address</label>
-          <input type="text" id="address" class="form-control" placeholder="House number and street name">
-        </div>
-      </div>
+  <!-- Address -->
+  <div class="mb-4">
+    <label for="address" class="form-label">Your Address</label>
+    <input type="text" id="address" name="address" class="form-control" placeholder="House number and street name">
+  </div>
 
-      <!-- Right Section -->
-      <div class="col col-lg-5">
-        <div class="card">
-          <div class="text-center mb-3">
-            
-          </div>
-
-          <!-- Order Summary -->
-          <div class="order-summary mb-4">
-    <div class="d-flex justify-content-between">
-        <p>Sub Total</p>
-        <p id="subtotal" data-value="<?php echo $totalSubtotal; ?>">
+  <!-- Right Section -->
+  <div class="col col-lg-5">
+    <div class="card">
+      <div class="order-summary mb-4">
+        <div class="d-flex justify-content-between">
+          <p>Sub Total</p>
+          <p id="subtotal" data-value="<?php echo $totalSubtotal; ?>">
             Rp<?php echo number_format($totalSubtotal, 0, ',', '.'); ?>
-        </p>
-    </div>
-    <input type="hidden" id="subtotal-hidden" value="<?php echo $totalSubtotal; ?>">
+          </p>
+        </div>
+        <input type="hidden" id="subtotal-hidden" name="subtotal" value="<?php echo $totalSubtotal; ?>">
 
-
-    
-
-    <div class="d-flex justify-content-between align-items-center">
-        <p>Shipping</p>
-        <select id="shipping-options" class="form-select" onchange="updateShippingCost()">
+        <div class="d-flex justify-content-between align-items-center">
+          <p>Shipping</p>
+          <select id="shipping-options" name="shipping_options" class="form-select" onchange="updateShippingCost()">
             <option value="50000">Fast (Rp50.000)</option>
             <option value="27000" selected>Regular (Rp27.000)</option>
             <option value="10000">Hemat (Rp10.000)</option>
-        </select>
-    </div>
+          </select>
+        </div>
 
-    <hr>
-    <div class="d-flex justify-content-between order-total">
-        <p>Order Total</p>
-        <p id="order-total" class="text-success">
+        <hr>
+        <div class="d-flex justify-content-between order-total">
+          <p>Order Total</p>
+          <p id="order-total" class="text-success">
             Rp<?php echo number_format($totalSubtotal - 35000 + 27000, 0, ',', '.'); ?>
-        </p>
-    </div>
-</div>
-
-          <!-- Payment Methods -->
-          <div class="payment-methods mb-4">
-            <h5>Payment Options</h5>
-            <form>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="paymentOption" id="bankTransfer">
-              <label class="form-check-label" for="bankTransfer">Direct Bank Transfer</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="paymentOption" id="cashOnDelivery">
-              <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="paymentOption" id="paypal">
-              <label class="form-check-label" for="paypal">PayPal</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="paymentOption" id="paypal">
-              <p class="d-inline-flex gap-1">
-              <a class="btn" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-              Credit Card
-            </a>
-            </p>
-            <div class="collapse" id="collapseExample">
-              <div class="card card-body">
-              <form>
-            <div class="card-info mb-4">
-              <input type="text" placeholder="Card Number">
-              <input type="text" placeholder="MM/YY">
-              <input type="text" placeholder="CVC">
-              <input type="text" placeholder="Province">
-            </div>
-              </form>
-              </div>
-            </div></form>
-            </div>
-          </div>
-
-
-
-          
-          <form method="POST" action="process_checkout.php">
-            <button type="submit" class="btn btn-primary w-100">Place Order</button>
-          </form>
+          </p>
+          <input type="hidden" id="order-total-hidden" name="order_total" value="<?php echo $totalSubtotal - 35000 + 27000; ?>">
         </div>
       </div>
+
+      <!-- Payment Methods -->
+      <div class="payment-methods mb-4">
+        <h5>Payment Options</h5>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentOption" id="bankTransfer" value="bank_transfer">
+          <label class="form-check-label" for="bankTransfer">Direct Bank Transfer</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentOption" id="cashOnDelivery" value="cash_on_delivery">
+          <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentOption" id="paypal" value="paypal">
+          <label class="form-check-label" for="paypal">PayPal</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentOption" id="creditCard" value="credit_card">
+          <label class="form-check-label" for="creditCard">Credit Card</label>
+          <div class="collapse" id="collapseExample">
+            <div class="card card-body">
+              <div class="card-info mb-4">
+                <input type="text" name="card_number" placeholder="Card Number" class="form-control mb-2">
+                <input type="text" name="card_expiry" placeholder="MM/YY" class="form-control mb-2">
+                <input type="text" name="card_cvc" placeholder="CVC" class="form-control mb-2">
+                <input type="text" name="card_province" placeholder="Province" class="form-control mb-2">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Place Order</button>
+    </div>
   </div>
+</form>
+
 
   <?php echo "<script>";
 echo "document.querySelectorAll('.remove-item').forEach(function(button) {";
