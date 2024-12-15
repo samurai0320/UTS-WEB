@@ -14,10 +14,6 @@ $totalSubtotal = 0;
 
 
 
-
-
-
-
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
     exit;
@@ -66,6 +62,7 @@ if (isset($_GET['view-all'])) {
 
 ?>
 
+<!DOCTYPE html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,16 +201,39 @@ function updateShippingCost() {
     const shippingSelect = document.getElementById('shipping-options');
     const shippingCost = parseInt(shippingSelect.value, 10);
     const subTotal = parseInt(document.getElementById('subtotal').getAttribute('data-value'), 10);
-    const couponDiscount = 35000; // Example static value
+    const couponDiscount = 35000; 
     const totalElement = document.getElementById('order-total');
 
-    const newTotal = subTotal - couponDiscount + shippingCost;
+    const newTotal = subTotal + shippingCost;
     totalElement.textContent = `Rp${newTotal.toLocaleString()}`;
 }
+
   </script>
+  <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.remove-item').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-item-id');
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'checkout.php', true);
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            console.log('Item removed successfully');
+                            button.closest('.d-flex').remove();
+                        } else {
+                            console.log('Error removing item: ' + xhr.status);
+                        }
+                    };
+                    xhr.send('item_id=' + encodeURIComponent(itemId));
+                });
+            });
+        });
+    </script>
 </head>
 <body>
 <header>
+
         <div class="logo">
             <img src="logo.jpg" alt="QuillBox Logo">
         </div>
@@ -252,13 +272,11 @@ function updateShippingCost() {
     </header>
   <div class="container py-5">
     <div class="row">
-      <!-- Left Section -->
-      <div class="col-lg-7">
+
         <h2 class="mb-3">Checkout</h2>
         
         
-        <!-- Item Details -->
-        <div class="card mb-4">
+        <div class="col card mb-4">
           <h5>Item Detail</h5>
           <?php
 
@@ -282,10 +300,23 @@ function updateShippingCost() {
                 echo "<p class='mb-0'>" . htmlspecialchars($product['name']) . "</p>";
                 echo "<p class='text-muted mb-0'>" . number_format($product['price'], 0, ',', '.') . " x " . $product['cart_quantity'] . "</p>";
                 echo "</div>";
-                echo "<button class='remove-item btn btn-danger btn-sm' data-item-id='" . $itemId . "'>Remove</button>";
+                echo '<form action="" method="post">';
+                echo "<button type='button' class='remove-item btn btn-danger btn-sm' data-item-id='" . $itemId . "'>Remove</button>";
+                echo '</form>';
                 echo "</div>";
             } else {
                 echo "<p>No product found for ID $itemId.</p>";
+            }
+            if (isset($_POST['item_id'])) {
+              $itemId = $_POST['item_id'];
+              if (($key = array_search($itemId, $_SESSION['selectedItems'])) !== false) {
+                  unset($_SESSION['selectedItems'][$key]);
+                  $_SESSION['selectedItems'] = array_values($_SESSION['selectedItems']);
+                  echo 'Success';
+              } else {
+                  echo 'Item not found in the session';
+              }
+              exit;
             }
           }?>
 
@@ -303,7 +334,7 @@ function updateShippingCost() {
       </div>
 
       <!-- Right Section -->
-      <div class="col-lg-5">
+      <div class="col col-lg-5">
         <div class="card">
           <div class="text-center mb-3">
             
@@ -320,10 +351,7 @@ function updateShippingCost() {
     <input type="hidden" id="subtotal-hidden" value="<?php echo $totalSubtotal; ?>">
 
 
-    <div class="d-flex justify-content-between">
-        <p>Coupon</p>
-        <p>-Rp35.000</p>
-    </div>
+    
 
     <div class="d-flex justify-content-between align-items-center">
         <p>Shipping</p>
@@ -346,6 +374,7 @@ function updateShippingCost() {
           <!-- Payment Methods -->
           <div class="payment-methods mb-4">
             <h5>Payment Options</h5>
+            <form>
             <div class="form-check">
               <input class="form-check-input" type="radio" name="paymentOption" id="bankTransfer">
               <label class="form-check-label" for="bankTransfer">Direct Bank Transfer</label>
@@ -358,15 +387,29 @@ function updateShippingCost() {
               <input class="form-check-input" type="radio" name="paymentOption" id="paypal">
               <label class="form-check-label" for="paypal">PayPal</label>
             </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="paymentOption" id="paypal">
+              <p class="d-inline-flex gap-1">
+              <a class="btn" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+              Credit Card
+            </a>
+            </p>
+            <div class="collapse" id="collapseExample">
+              <div class="card card-body">
+              <form>
+            <div class="card-info mb-4">
+              <input type="text" placeholder="Card Number">
+              <input type="text" placeholder="MM/YY">
+              <input type="text" placeholder="CVC">
+              <input type="text" placeholder="Province">
+            </div>
+              </form>
+              </div>
+            </div></form>
+            </div>
           </div>
 
-          <!-- Card Information -->
-          <div class="card-info mb-4">
-            <input type="text" placeholder="Card Number">
-            <input type="text" placeholder="MM/YY">
-            <input type="text" placeholder="CVC">
-            <input type="text" placeholder="Province">
-          </div>
+
 
           
           <form method="POST" action="process_checkout.php">
@@ -374,8 +417,8 @@ function updateShippingCost() {
           </form>
         </div>
       </div>
-    </div>
   </div>
+
   <?php echo "<script>";
 echo "document.querySelectorAll('.remove-item').forEach(function(button) {";
 echo "button.addEventListener('click', function() {";
@@ -393,6 +436,8 @@ echo "}";
 echo "});";
 echo "});";
 echo "</script>";
+
 ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
