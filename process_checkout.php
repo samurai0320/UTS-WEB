@@ -1,26 +1,35 @@
 <?php
-include 'donnection.php'; // Pastikan nama file sudah benar
+include 'donnection.php'; 
 session_start();
 
-// Pastikan pengguna login
+
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
     exit();
 }
 
-// Ambil user ID dan data dari form
+
 $userId = $_SESSION['user_id'];
 $address = $_POST['address'] ?? '';
 $orderNotes = $_POST['order_notes'] ?? '';
 $paymentOption = $_POST['paymentOption'] ?? '';
 $shippingCost = $_POST['shipping_options'] ?? 0;
 
-// Validasi input (pastikan tidak ada nilai kosong)
-if (empty($address) ) {
-    die("Alamat  harus diisi.");
+
+if (!empty($_POST['selectedItems'])) {
+    $selectedItems = explode(',', $_POST['selectedItems']);
+} elseif (!empty($_SESSION['selectedItems'])) {
+    $selectedItems = $_SESSION['selectedItems'];
+} else {
+    $selectedItems = [];
 }
 
-// Dapatkan cart_id pengguna
+
+if (empty($address)) {
+    die("Alamat harus diisi.");
+}
+
+
 $sql = "SELECT cart_id FROM cart WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $userId);
@@ -32,7 +41,7 @@ if (!$row) {
 }
 $cartId = $row['cart_id'];
 
-// Ambil data item dari keranjang
+
 $sql = "SELECT ci.productid, ci.cart_quantity, p.price 
         FROM cart_item ci 
         JOIN products p ON ci.productid = p.id 
@@ -44,27 +53,31 @@ $result = $stmt->get_result();
 
 $items = [];
 $totalAmount = 0;
+
+
 while ($item = $result->fetch_assoc()) {
-    $items[] = $item;
-    $totalAmount += $item['cart_quantity'] * $item['price'];
+    if (in_array($item['productid'], $selectedItems)) {
+        $items[] = $item;
+        $totalAmount += $item['cart_quantity'] * $item['price'];
+    }
 }
 
-// Tambahkan biaya pengiriman ke total
+
 $totalAmount += $shippingCost;
 
-// Mulai transaksi
+
 $conn->begin_transaction();
 try {
-    // Insert ke tabel orders
+    
     $sql = "INSERT INTO orders (user_id, total_amount, order_date, status, address, information) 
             VALUES (?, ?, NOW(), 'Pending', ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("idss", $userId, $totalAmount, $address, $orderNotes);
     $stmt->execute();
     
-    $orderId = $stmt->insert_id; // Dapatkan order_id terakhir
+    $orderId = $stmt->insert_id; 
 
-    // Insert ke tabel order_items
+    
     $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
@@ -73,13 +86,14 @@ try {
         $stmt->execute();
     }
 
-    // Commit transaksi
+    
     $conn->commit();
 
-    echo "Pesanan berhasil dibuat dengan ID: $orderId";
-
+    
+    header("location: homepage.php");
+    exit();
 } catch (Exception $e) {
-    // Rollback jika terjadi kesalahan
+    
     $conn->rollback();
     die("Terjadi kesalahan: " . $e->getMessage());
 }
