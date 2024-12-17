@@ -105,7 +105,7 @@ while ($row = $result->fetch_assoc()) {
                     echo '<button type="submit" name="updateQuantity">+</button>';
                     echo '</form>';
                     ?>
-                    <input type="checkbox" name="selectedItems[]" value="<?php echo $item['id']; ?>" onchange="updateSelectedItems(this)">
+                    
 
                 </div>
             </div>
