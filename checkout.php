@@ -1,18 +1,16 @@
 <?php
-include 'donnection.php'; 
+include 'donnection.php';
 session_start();
 
 if (!empty($_POST['selectedItems'])) {
-  $selectedItems = explode(',', $_POST['selectedItems']);
+    $selectedItems = explode(',', $_POST['selectedItems']);
 } elseif (!empty($_SESSION['selectedItems'])) {
-  $selectedItems = $_SESSION['selectedItems'];
+    $selectedItems = $_SESSION['selectedItems'];
 } else {
-  $selectedItems = [];
+    $selectedItems = [];
 }
 $totalQuantity = 0;
 $totalSubtotal = 0;
-
-
 
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
@@ -28,74 +26,93 @@ if ($result && $result->num_rows > 0) {
     $cartId = $row['cart_id'];
 } else {
     echo "Cart ID not found for user ID: " . $userId;
+    exit;
 }
+
+// Add items to cart
 function addToCart($productId, $cartId) {
     include 'donnection.php';
-    
+
     $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
     $result = $conn->query($sql);
-  
+
     if ($result->num_rows > 0) {
-        
         $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = '$cartId' AND productid = '$productId'";
         $conn->query($sql);
     } else {
-        
         $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES ('$cartId', '$productId', 1)";
         $conn->query($sql);
     }
 }
 
-
+// Fetch products
 $sql = "SELECT * FROM products";
 $result = $conn->query($sql);
 
 if (isset($_GET['search'])) {
     $searchQuery = $_GET['search'];
-    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'";
     $result = $conn->query($sql);
-} 
+}
 if (isset($_GET['view-all'])) {
     $sql = "SELECT * FROM products";
     $result = $conn->query($sql);
 }
-$stmt = $conn->prepare('SELECT * FROM cart_item WHERE id = ?');
-$stmt->bind_param('i', $user_id);
+
+// Prepare cart items
+$stmt = $conn->prepare('SELECT ci.*, p.price, p.name FROM cart_item ci JOIN products p ON ci.productid = p.id WHERE ci.cartid = ?');
+$stmt->bind_param('i', $cartId);
 $stmt->execute();
 $result = $stmt->get_result();
 $cart_items = $result->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $address = $_POST['address'];
-    $information = $_POST['information'];
+    $information = $_POST['order_notes'];
+    $shippingCost = $_POST['shipping_options'];
+
     $total_amount = 0;
 
-    // Calculate total amount
-    foreach ($cart_items as $item) {
-        $total_amount += $item['price'] * $item['quantity'];
+    // Calculate total amount based on selected items
+    foreach ($selectedItems as $itemId) {
+        foreach ($cart_items as $item) {
+            if ($item['productid'] == $itemId) {
+                $subtotal = $item['price'] * $item['cart_quantity'];
+                $total_amount += $subtotal;
+                break;
+            }
+        }
     }
 
-    // Insert into `order` table
+    $total_amount += $shippingCost; // Add shipping cost
+
+    // Insert order into database
     $stmt = $conn->prepare('INSERT INTO `order` (user_id, total_amount, address, information) VALUES (?, ?, ?, ?)');
-    $stmt->bind_param('idss', $user_id, $total_amount, $address, $information);
+    $stmt->bind_param('idss', $userId, $total_amount, $address, $information);
     $stmt->execute();
     $order_id = $stmt->insert_id;
 
-    // Insert into `order_item` table
-    foreach ($cart_items as $item) {
-        $product_id = $item['id']; // Assuming `id` is product ID in `cart_items`
-        $quantity = $item['quantity'];
-        $price = $item['price'];
+    // Insert order items
+    foreach ($selectedItems as $itemId) {
+        foreach ($cart_items as $item) {
+            if ($item['productid'] == $itemId) {
+                $quantity = $item['cart_quantity'];
+                $price = $item['price'];
 
-        $stmt = $conn->prepare('INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
-        $stmt->bind_param('iiid', $order_id, $product_id, $quantity, $price);
-        $stmt->execute();
+                $stmt = $conn->prepare('INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
+                $stmt->bind_param('iiid', $order_id, $itemId, $quantity, $price);
+                $stmt->execute();
+                break;
+            }
+        }
     }
 
-    // Clear the cart
-    $stmt = $conn->prepare('DELETE FROM cart_items WHERE userid = ?');
-    $stmt->bind_param('i', $user_id);
-    $stmt->execute();
+    // Clear selected items from cart
+    foreach ($selectedItems as $itemId) {
+        $stmt = $conn->prepare('DELETE FROM cart_item WHERE cartid = ? AND productid = ?');
+        $stmt->bind_param('ii', $cartId, $itemId);
+        $stmt->execute();
+    }
 
     echo "Order placed successfully!";
     header('Location: order_success.php');
