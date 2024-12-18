@@ -96,6 +96,7 @@ $result = $conn->query($sql);
 
 <div class="navbar">
     <span>Admin Panel</span>
+    <a href="order_managementAdmin.php">Order</a>
     <a href="log-in.php" style="color: white;">Logout</a>
 </div>
 
