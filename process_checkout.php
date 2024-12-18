@@ -54,7 +54,6 @@ function insertOrderItems($conn, $orderId, $items) {
     $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
-    // Bind parameters once outside the loop
     $stmt->bind_param("iiid", $orderId, $productId, $quantity, $price);
 
     foreach ($items as $item) {
@@ -62,8 +61,11 @@ function insertOrderItems($conn, $orderId, $items) {
         $quantity = $item['cart_quantity'];
         $price = $item['price'];
 
-        // Execute the prepared statement for each item
+        
         $stmt->execute();
+
+        
+        updateProductStock($conn, $productId, $quantity);
     }
 
     $stmt->close();
@@ -76,11 +78,19 @@ function removeCartItems($conn, $cartId) {
     $stmt->execute();
 }
 
+function updateProductStock($conn, $productId, $quantitySold) {
+    
+    $sql = "UPDATE products SET quantity = quantity - ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $quantitySold, $productId);
+    $stmt->execute();
+}
+
 $userId = $_SESSION['user_id'];
 $address = $_POST['address'] ?? '';
 $orderNotes = $_POST['order_notes'] ?? '';
-$shippingCost = $_POST['shipping_options'] ?? 0; // Shipping options are sent from the form
-$shipping = ''; // To be determined based on shipping cost
+$shippingCost = $_POST['shipping_options'] ?? 0;
+$shipping = ''; 
 
 if (empty($address)) {
     die("Alamat harus diisi.");
@@ -88,11 +98,11 @@ if (empty($address)) {
 
 $cartId = getCartId($conn, $userId);
 
-// Ambil semua item dalam keranjang
-list($items, $totalAmount) = getCartItems($conn, $cartId);
-$totalAmount += $shippingCost; // Include shipping cost into the total amount
 
-// Tentukan shipping service berdasarkan shipping cost
+list($items, $totalAmount) = getCartItems($conn, $cartId);
+$totalAmount += $shippingCost; 
+
+
 if ($shippingCost == 50000) {
     $shipping = "Fast";
 } elseif ($shippingCost == 27000) {
@@ -100,17 +110,23 @@ if ($shippingCost == 50000) {
 } elseif ($shippingCost == 10000) {
     $shipping = "Hemat";
 } else {
-    $shipping = "Unknown"; // Jika tidak ada yang cocok
+    $shipping = "Unknown"; 
 }
 
 $conn->begin_transaction();
 try {
+    
     $orderId = insertOrder($conn, $userId, $totalAmount, $address, $orderNotes, $shipping);
+    
+    
     insertOrderItems($conn, $orderId, $items);
+    
+    
     removeCartItems($conn, $cartId);
 
     $conn->commit();
 
+    
     header("location: homepage.php");
     exit();
 } catch (Exception $e) {

@@ -14,7 +14,7 @@ $result = $conn->query($sql);
 $usernames = $result->fetch_assoc()['username'];
 $_SESSION['username'] = $usernames;
 
-// Query to get all orders
+
 $sql = "SELECT * FROM orders";
 $orderResults = $conn->query($sql);
 ?>
@@ -62,7 +62,7 @@ $orderResults = $conn->query($sql);
         <th>Order ID</th>
         <th>Address</th>
         <th>Status</th>
-        <th>Items ID</th> <!-- Each order's product IDs -->
+        <th>Items ID</th> 
         <th>Amount</th>
         <th>Date</th>
         <th>Shipping Service</th>
@@ -75,7 +75,7 @@ $orderResults = $conn->query($sql);
             if ($orderResults && $orderResults->num_rows > 0) {
                 while ($order = $orderResults->fetch_assoc()) {
                     $orderId = $order['order_id'];
-                    // Query to get product IDs for each order
+                    
                     $sqlItems = "SELECT product_id FROM order_items WHERE order_id = '$orderId'";
                     $itemsResults = $conn->query($sqlItems);
 
@@ -84,7 +84,7 @@ $orderResults = $conn->query($sql);
                         $productIds[] = $item['product_id'];
                     }
 
-                    // Display order information and the list of product IDs
+                    
                     echo "<tr>";
                     echo "<td>{$order['order_id']}</td>";
                     echo "<td>{$order['address']}</td>";

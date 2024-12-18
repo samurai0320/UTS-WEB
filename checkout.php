@@ -81,20 +81,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $information = $_POST['information'];
     $total_amount = 0;
 
-    // Calculate total amount
+    
     foreach ($cart_items as $item) {
         $total_amount += $item['price'] * $item['quantity'];
     }
 
-    // Insert into `order` table
+    
     $stmt = $conn->prepare('INSERT INTO `order` (user_id, total_amount, address, information) VALUES (?, ?, ?, ?)');
     $stmt->bind_param('idss', $user_id, $total_amount, $address, $information);
     $stmt->execute();
     $order_id = $stmt->insert_id;
 
-    // Insert into `order_item` table
+    
     foreach ($cart_items as $item) {
-        $product_id = $item['id']; // Assuming `id` is product ID in `cart_items`
+        $product_id = $item['id']; 
         $quantity = $item['quantity'];
         $price = $item['price'];
 
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         $stmt->execute();
     }
 
-    // Clear the cart
+    
     $stmt = $conn->prepare('DELETE FROM cart_items WHERE userid = ?');
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
