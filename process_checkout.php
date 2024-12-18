@@ -41,11 +41,11 @@ function getCartItems($conn, $cartId) {
     return [$items, $totalAmount];
 }
 
-function insertOrder($conn, $userId, $totalAmount, $address, $orderNotes) {
-    $sql = "INSERT INTO orders (user_id, total_amount, order_date, status, address, information) 
-            VALUES (?, ?, NOW(), 'Pending', ?, ?)";
+function insertOrder($conn, $userId, $totalAmount, $address, $orderNotes, $shipping) {
+    $sql = "INSERT INTO orders (user_id, total_amount, order_date, status, address, information, shipping_service) 
+            VALUES (?, ?, NOW(), 'Pending', ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("idss", $userId, $totalAmount, $address, $orderNotes);
+    $stmt->bind_param("idsss", $userId, $totalAmount, $address, $orderNotes, $shipping);
     $stmt->execute();
     return $stmt->insert_id;
 }
@@ -53,10 +53,20 @@ function insertOrder($conn, $userId, $totalAmount, $address, $orderNotes) {
 function insertOrderItems($conn, $orderId, $items) {
     $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
+
+    // Bind parameters once outside the loop
+    $stmt->bind_param("iiid", $orderId, $productId, $quantity, $price);
+
     foreach ($items as $item) {
-        $stmt->bind_param("iiid", $orderId, $item['productid'], $item['cart_quantity'], $item['price']);
+        $productId = $item['productid'];
+        $quantity = $item['cart_quantity'];
+        $price = $item['price'];
+
+        // Execute the prepared statement for each item
         $stmt->execute();
     }
+
+    $stmt->close();
 }
 
 function removeCartItems($conn, $cartId) {
@@ -69,7 +79,8 @@ function removeCartItems($conn, $cartId) {
 $userId = $_SESSION['user_id'];
 $address = $_POST['address'] ?? '';
 $orderNotes = $_POST['order_notes'] ?? '';
-$shippingCost = $_POST['shipping_options'] ?? 0;
+$shippingCost = $_POST['shipping_options'] ?? 0; // Shipping options are sent from the form
+$shipping = ''; // To be determined based on shipping cost
 
 if (empty($address)) {
     die("Alamat harus diisi.");
@@ -79,11 +90,22 @@ $cartId = getCartId($conn, $userId);
 
 // Ambil semua item dalam keranjang
 list($items, $totalAmount) = getCartItems($conn, $cartId);
-$totalAmount += $shippingCost;
+$totalAmount += $shippingCost; // Include shipping cost into the total amount
+
+// Tentukan shipping service berdasarkan shipping cost
+if ($shippingCost == 50000) {
+    $shipping = "Fast";
+} elseif ($shippingCost == 27000) {
+    $shipping = "Regular";
+} elseif ($shippingCost == 10000) {
+    $shipping = "Hemat";
+} else {
+    $shipping = "Unknown"; // Jika tidak ada yang cocok
+}
 
 $conn->begin_transaction();
 try {
-    $orderId = insertOrder($conn, $userId, $totalAmount, $address, $orderNotes);
+    $orderId = insertOrder($conn, $userId, $totalAmount, $address, $orderNotes, $shipping);
     insertOrderItems($conn, $orderId, $items);
     removeCartItems($conn, $cartId);
 
@@ -96,4 +118,5 @@ try {
     die("Terjadi kesalahan: " . $e->getMessage());
 }
 ?>
+
 

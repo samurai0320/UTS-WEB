@@ -375,21 +375,23 @@ function updateShippingCost() {
           </p>
         </div>
         <input type="hidden" id="subtotal-hidden" name="subtotal" value="<?php echo $totalSubtotal; ?>">
-
-        <div class="d-flex justify-content-between align-items-center">
-          <p>Shipping</p>
-          <select id="shipping-options" name="shipping_options" class="form-select" onchange="updateShippingCost()">
-            <option value="50000">Fast (Rp50.000)</option>
-            <option value="27000" selected>Regular (Rp27.000)</option>
-            <option value="10000">Hemat (Rp10.000)</option>
-          </select>
-        </div>
+        
+          <div class="d-flex justify-content-between align-items-center">
+            <p>Shipping</p>
+            <select id="shipping-options" name="shipping_options" class="form-select" onchange="updateShippingCost()">
+              <option value="50000">Fast (Rp50.000)</option>
+              <option value="27000" selected>Regular (Rp27.000)</option>
+              <option value="10000">Hemat (Rp10.000)</option>
+            </select>
+          </div>
+        
+        
 
         <hr>
         <div class="d-flex justify-content-between order-total">
           <p>Order Total</p>
           <p id="order-total" class="text-success">
-            Rp<?php echo number_format($totalSubtotal - 35000 + 27000, 0, ',', '.'); ?>
+            Rp<?php echo number_format($totalSubtotal + 27000, 0, ',', '.'); ?>
           </p>
           <input type="hidden" id="order-total-hidden" name="order_total" value="<?php echo $totalSubtotal - 35000 + 27000; ?>">
         </div>
