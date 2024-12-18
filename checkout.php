@@ -1,16 +1,18 @@
 <?php
-include 'donnection.php';
+include 'donnection.php'; 
 session_start();
 
 if (!empty($_POST['selectedItems'])) {
-    $selectedItems = explode(',', $_POST['selectedItems']);
+  $selectedItems = explode(',', $_POST['selectedItems']);
 } elseif (!empty($_SESSION['selectedItems'])) {
-    $selectedItems = $_SESSION['selectedItems'];
+  $selectedItems = $_SESSION['selectedItems'];
 } else {
-    $selectedItems = [];
+  $selectedItems = [];
 }
 $totalQuantity = 0;
 $totalSubtotal = 0;
+
+
 
 if (!isset($_SESSION['user_id'])) {
     header("location: log-in.php");
@@ -26,93 +28,85 @@ if ($result && $result->num_rows > 0) {
     $cartId = $row['cart_id'];
 } else {
     echo "Cart ID not found for user ID: " . $userId;
-    exit;
 }
-
-// Add items to cart
 function addToCart($productId, $cartId) {
     include 'donnection.php';
-
+    
     $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
     $result = $conn->query($sql);
-
+  
     if ($result->num_rows > 0) {
+        
         $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = '$cartId' AND productid = '$productId'";
         $conn->query($sql);
     } else {
+        
         $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES ('$cartId', '$productId', 1)";
         $conn->query($sql);
     }
 }
 
-// Fetch products
+$sql = "SELECT cart_id FROM cart WHERE user_id = '".$_SESSION['user_id']."'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$cartId = $row['cart_id'];
+
+$sql = "SELECT ci.*, p.* FROM cart_item ci INNER JOIN products p ON ci.productid = p.id WHERE ci.cartid = '$cartId'";
+$result = $conn->query($sql);
+$cartItems = array();
+while ($row = $result->fetch_assoc()) {
+    $cartItems[] = $row;
+}
+
 $sql = "SELECT * FROM products";
 $result = $conn->query($sql);
 
 if (isset($_GET['search'])) {
     $searchQuery = $_GET['search'];
-    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'";
+    $sql = "SELECT * FROM products WHERE name LIKE '%$searchQuery%' OR description LIKE '%$searchQuery%' OR category LIKE '%$searchQuery%'"; ;
     $result = $conn->query($sql);
-}
+} 
 if (isset($_GET['view-all'])) {
     $sql = "SELECT * FROM products";
     $result = $conn->query($sql);
 }
-
-// Prepare cart items
-$stmt = $conn->prepare('SELECT ci.*, p.price, p.name FROM cart_item ci JOIN products p ON ci.productid = p.id WHERE ci.cartid = ?');
-$stmt->bind_param('i', $cartId);
+$stmt = $conn->prepare('SELECT * FROM cart_item WHERE id = ?');
+$stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $cart_items = $result->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $address = $_POST['address'];
-    $information = $_POST['order_notes'];
-    $shippingCost = $_POST['shipping_options'];
-
+    $information = $_POST['information'];
     $total_amount = 0;
 
-    // Calculate total amount based on selected items
-    foreach ($selectedItems as $itemId) {
-        foreach ($cart_items as $item) {
-            if ($item['productid'] == $itemId) {
-                $subtotal = $item['price'] * $item['cart_quantity'];
-                $total_amount += $subtotal;
-                break;
-            }
-        }
+    // Calculate total amount
+    foreach ($cart_items as $item) {
+        $total_amount += $item['price'] * $item['quantity'];
     }
 
-    $total_amount += $shippingCost; // Add shipping cost
-
-    // Insert order into database
+    // Insert into `order` table
     $stmt = $conn->prepare('INSERT INTO `order` (user_id, total_amount, address, information) VALUES (?, ?, ?, ?)');
-    $stmt->bind_param('idss', $userId, $total_amount, $address, $information);
+    $stmt->bind_param('idss', $user_id, $total_amount, $address, $information);
     $stmt->execute();
     $order_id = $stmt->insert_id;
 
-    // Insert order items
-    foreach ($selectedItems as $itemId) {
-        foreach ($cart_items as $item) {
-            if ($item['productid'] == $itemId) {
-                $quantity = $item['cart_quantity'];
-                $price = $item['price'];
+    // Insert into `order_item` table
+    foreach ($cart_items as $item) {
+        $product_id = $item['id']; // Assuming `id` is product ID in `cart_items`
+        $quantity = $item['quantity'];
+        $price = $item['price'];
 
-                $stmt = $conn->prepare('INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
-                $stmt->bind_param('iiid', $order_id, $itemId, $quantity, $price);
-                $stmt->execute();
-                break;
-            }
-        }
-    }
-
-    // Clear selected items from cart
-    foreach ($selectedItems as $itemId) {
-        $stmt = $conn->prepare('DELETE FROM cart_item WHERE cartid = ? AND productid = ?');
-        $stmt->bind_param('ii', $cartId, $itemId);
+        $stmt = $conn->prepare('INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
+        $stmt->bind_param('iiid', $order_id, $product_id, $quantity, $price);
         $stmt->execute();
     }
+
+    // Clear the cart
+    $stmt = $conn->prepare('DELETE FROM cart_items WHERE userid = ?');
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
 
     echo "Order placed successfully!";
     header('Location: order_success.php');
@@ -336,48 +330,26 @@ function updateShippingCost() {
         
         
         <div class="col card mb-4">
-          <h5>Item Detail</h5>
-          <?php
+  <h5>Item Detail</h5>
+  <?php
+  foreach ($cartItems as $item) {
+    $subtotal = $item['price'] * $item['cart_quantity'];
+    $totalQuantity += $item['cart_quantity'];
+    $totalSubtotal += $subtotal;
 
-          foreach ($selectedItems as $itemId) {
-            $sql = "SELECT p.*, ci.cart_quantity 
-                    FROM products p 
-                    JOIN cart_item ci ON p.id = ci.productid 
-                    WHERE p.id = '$itemId' AND ci.cartid = '$cartId'";
-            $result = $conn->query($sql);
+    echo "<div class='d-flex align-items-center justify-content-between mb-3'>";
+    echo "<img src='" . htmlspecialchars($item['image']) . "' alt='Product Image' class='img-thumbnail'>";
+    echo "<div>";
+    echo "<p class='mb-0'>" . htmlspecialchars($item['name']) . "</p>";
+    echo "<p class='text-muted mb-0'>" . number_format($item['price'], 0, ',', '.') . " x " . $item['cart_quantity'] . "</p>";
+    echo "</div>";
+    echo '<form action="" method="post">';
+    echo "<button type='button' class='remove-item btn btn-danger btn-sm' data-item-id='" . $item['productid'] . "'>Remove</button>";
+    echo '</form>';
+    echo "</div>";
+  }
+  ?>
 
-            if ($result->num_rows > 0) {
-                $product = $result->fetch_assoc();
-                
-                $subtotal = $product['price'] * $product['cart_quantity'];
-
-                $totalQuantity += $product['cart_quantity'];
-                $totalSubtotal += $subtotal;
-                echo "<div class='d-flex align-items-center justify-content-between mb-3'>";
-                echo "<img src='" . htmlspecialchars($product['image']) . "' alt='Product Image' class='img-thumbnail'>";
-                echo "<div>";
-                echo "<p class='mb-0'>" . htmlspecialchars($product['name']) . "</p>";
-                echo "<p class='text-muted mb-0'>" . number_format($product['price'], 0, ',', '.') . " x " . $product['cart_quantity'] . "</p>";
-                echo "</div>";
-                echo '<form action="" method="post">';
-                echo "<button type='button' class='remove-item btn btn-danger btn-sm' data-item-id='" . $itemId . "'>Remove</button>";
-                echo '</form>';
-                echo "</div>";
-            } else {
-                echo "<p>No product found for ID $itemId.</p>";
-            }
-            if (isset($_POST['item_id'])) {
-              $itemId = $_POST['item_id'];
-              if (($key = array_search($itemId, $_SESSION['selectedItems'])) !== false) {
-                  unset($_SESSION['selectedItems'][$key]);
-                  $_SESSION['selectedItems'] = array_values($_SESSION['selectedItems']);
-                  echo 'Success';
-              } else {
-                  echo 'Item not found in the session';
-              }
-              exit;
-            }
-          }?>
 
         <!-- Additional Info -->
         <form method="POST" action="process_checkout.php">

@@ -16,6 +16,9 @@ $result = $conn->query($sql);
 $usernames = $result->fetch_assoc()['username'];
 $_SESSION['username'] = $usernames;
 
+$sql = "SELECT * FROM orders";
+$result = $conn->query($sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -58,93 +61,43 @@ $_SESSION['username'] = $usernames;
       <button>Delivered</button>
       <button>Cancelled</button>
       <button>Returned</button>
-      <button class="create-order">+ Create Order</button>
      </div>
      <table class="table">
       <thead>
        <tr>
         <th>Order ID</th>
-        <th>Order Number</th>
+        <th>address</th>
         <th>Status</th>
         <th>Item</th>
         <th>Date</th>
         <th>Shipping Service</th>
-        <th>Tracking Code</th>
+        <th>information</th>
+        <th>action</th>
        </tr>
       </thead>
       <tbody>
-       <tr>
-        <td>00001</td>
-        <td>59217342</td>
-        <td><span class="status on-the-way">On the Way</span></td>
-        <td>1</td>
-        <td>05/12/2024</td>
-        <td>Hemat</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
-       <tr>
-        <td>00002</td>
-        <td>81736193</td>
-        <td><span class="status on-process">On Process</span></td>
-        <td>2</td>
-        <td>07/12/2024</td>
-        <td>Fast</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
-       <tr>
-        <td>00003</td>
-        <td>59217344</td>
-        <td><span class="status delivered">Delivered</span></td>
-        <td>12</td>
-        <td>07/12/2024</td>
-        <td>Regular</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
-       <tr>
-        <td>00129</td>
-        <td>59217345</td>
-        <td><span class="status cancelled">Cancelled</span></td>
-        <td>22</td>
-        <td>28/11/2024</td>
-        <td>Regular</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
-       <tr>
-        <td>00194</td>
-        <td>59217346</td>
-        <td><span class="status returned">Returned</span></td>
-        <td>32</td>
-        <td>21/11/2024</td>
-        <td>Regular</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
-       <tr>
-        <td>00200</td>
-        <td>59217346</td>
-        <td><span class="status draft">Draft</span></td>
-        <td>41</td>
-        <td>17/11/2024</td>
-        <td>Regular</td>
-        <td>940010010936113003113</td>
-        <td>
-            <i class="fas fa-edit edit"></i>
-        </td>
-       </tr>
+      <?php
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>{$row['order_id']}</td>";
+                    echo "<td>{$row['order_number']}</td>";
+                    echo "<td>{$row['status']}</td>";
+                    echo "<td>{$row['item_count']}</td>";
+                    echo "<td>{$row['order_date']}</td>";
+                    echo "<td>{$row['shipping_service']}</td>";
+                    echo "<td>{$row['tracking_code']}</td>";
+                    echo "<td>
+                            <a href='edit_order.php?id={$row['order_id']}' class='btn btn-primary btn-sm'>Edit</a>
+                            <a href='delete_order.php?id={$row['order_id']}' class='btn btn-danger btn-sm'>Delete</a>
+                            <a href='refund_order.php?id={$row['order_id']}' class='btn btn-warning btn-sm'>Refund</a>
+                          </td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='8'>No orders found.</td></tr>";
+            }
+            ?>
       </tbody>
      </table>
     </main>
