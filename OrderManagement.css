@@ -1,0 +1,213 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f6fa;
+}
+
+.header {
+    background-color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.header .logo {
+    display: flex;
+    align-items: center;
+}
+
+.header .logo img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.header .nav {
+    display: flex;
+    align-items: center;
+}
+
+.header .nav a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.header .user {
+    display: flex;
+    align-items: center;
+}
+
+.header .user span {
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+.header .user i {
+    font-size: 24px;
+}
+
+.main {
+    display: flex;
+    padding: 20px;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-right: 20px;
+}
+
+.sidebar img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.sidebar h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.sidebar p {
+    margin: 5px 0 20px;
+    color: #666;
+}
+
+.sidebar .menu a {
+    display: block;
+    padding: 10px 15px;
+    margin: 5px 0;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.sidebar .menu a.active {
+    background-color: #6c5ce7;
+    color: #fff;
+}
+
+.content {
+    flex: 1;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.content h2 {
+    margin: 0 0 20px;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.content .filters {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.content .filters button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #f1f1f1;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.content .filters button.active {
+    background-color: #6c5ce7;
+    color: #fff;
+}
+
+.content .create-order {
+    margin-left: auto;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #6c5ce7;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.content table th, .content table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.content table th {
+    background-color: #f9f9f9;
+    font-weight: 500;
+}
+
+.content table td .status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.content table td .status.on-the-way {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+.content table td .status.on-process {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.content table td .status.delivered {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.content table td .status.cancelled {
+    background-color: #FCE7F3;
+    color: #9D174D;
+}
+
+.content table td .status.returned {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.content table td .status.draft {
+    background-color: #F3F4F6;
+    color: #1F2937;
+}
+
+.content table td .edit {
+    color: #6c5ce7;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .main {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
