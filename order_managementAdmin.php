@@ -47,14 +47,6 @@ $orderResults = $conn->query($sql);
 
   <div class="content">
     <h2 class="fw-bold">Order Management</h2>
-    <div class="filters">
-      <button class="active">All</button>
-      <button>Pending</button>
-      <button>Processing</button>
-      <button>Shipped</button>
-      <button>Canceled</button>
-    </div>
-
     <table class="table">
       <thead>
        <tr>
