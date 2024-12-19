@@ -14,7 +14,6 @@ $result = $conn->query($sql);
 $usernames = $result->fetch_assoc()['username'];
 $_SESSION['username'] = $usernames;
 
-
 $sql = "SELECT * FROM orders";
 $orderResults = $conn->query($sql);
 ?>
@@ -37,7 +36,7 @@ $orderResults = $conn->query($sql);
         <span>QuillBox</span>
     </div>
     <div class="nav">
-        <a href="#" class="nav-link">Homes</a>
+        <a href="#" class="nav-link">Home</a>
         <a href="halamankelolaproduk.php" class="nav-link">Products</a>
     </div>
     <div class="user">
@@ -47,13 +46,13 @@ $orderResults = $conn->query($sql);
   </div>
 
   <div class="content">
-    <h2 class="fw-bold">Order management</h2>
+    <h2 class="fw-bold">Order Management</h2>
     <div class="filters">
       <button class="active">All</button>
-      <button>On Process</button>
-      <button>Delivered</button>
-      <button>Cancelled</button>
-      <button>Returned</button>
+      <button>Pending</button>
+      <button>Processing</button>
+      <button>Shipped</button>
+      <button>Canceled</button>
     </div>
 
     <table class="table">
@@ -72,37 +71,48 @@ $orderResults = $conn->query($sql);
       </thead>
       <tbody>
       <?php
-            if ($orderResults && $orderResults->num_rows > 0) {
-                while ($order = $orderResults->fetch_assoc()) {
-                    $orderId = $order['order_id'];
-                    
-                    $sqlItems = "SELECT product_id FROM order_items WHERE order_id = '$orderId'";
-                    $itemsResults = $conn->query($sqlItems);
+        if ($orderResults && $orderResults->num_rows > 0) {
+            while ($order = $orderResults->fetch_assoc()) {
+                $orderId = $order['order_id'];
+                
+                $sqlItems = "SELECT product_id FROM order_items WHERE order_id = '$orderId'";
+                $itemsResults = $conn->query($sqlItems);
 
-                    $productIds = [];
-                    while ($item = $itemsResults->fetch_assoc()) {
-                        $productIds[] = $item['product_id'];
-                    }
-
-                    
-                    echo "<tr>";
-                    echo "<td>{$order['order_id']}</td>";
-                    echo "<td>{$order['address']}</td>";
-                    echo "<td>{$order['status']}</td>";
-                    echo "<td>" . implode(", ", $productIds) . "</td>"; 
-                    echo "<td>{$order['total_amount']}</td>";
-                    echo "<td>{$order['order_date']}</td>";
-                    echo "<td>{$order['shipping_service']}</td>";
-                    echo "<td>{$order['information']}</td>";
-                    echo "<td>
-                            <a href='edit_order.php?id={$order['order_id']}' class='btn btn-primary btn-sm'>Edit</a>
-                            <a href='delete_order.php?id={$order['order_id']}' class='btn btn-danger btn-sm'>Delete</a>
-                          </td>";
-                    echo "</tr>";
+                $productIds = [];
+                while ($item = $itemsResults->fetch_assoc()) {
+                    $productIds[] = $item['product_id'];
                 }
-            } else {
-                echo "<tr><td colspan='9'>No orders found.</td></tr>";
+
+                echo "<tr>";
+                echo "<td>{$order['order_id']}</td>";
+                echo "<td>{$order['address']}</td>";
+                echo "<td>{$order['status']}</td>";
+                echo "<td>" . implode(", ", $productIds) . "</td>";
+                echo "<td>{$order['total_amount']}</td>";
+                echo "<td>{$order['order_date']}</td>";
+                echo "<td>{$order['shipping_service']}</td>";
+                echo "<td>{$order['information']}</td>";
+                echo "<td>
+                        <form method='POST' action='edit_order.php' class='d-inline'>
+                            <input type='hidden' name='order_id' value='{$order['order_id']}'>
+                            <select name='status' class='form-select form-select-sm'>
+                                <option value='Pending'>Pending</option>
+                                <option value='Processing'>Processing</option>
+                                <option value='Shipped'>Shipped</option>
+                                <option value='Canceled'>Canceled</option>
+                            </select>
+                            <button type='submit' class='btn btn-success btn-sm'>Update</button>
+                        </form>
+                        <form method='POST' action='delete_order.php' class='d-inline'>
+                            <input type='hidden' name='order_id' value='{$order['order_id']}'>
+                            <button type='submit' class='btn btn-danger btn-sm'>Delete</button>
+                        </form>
+                      </td>";
+                echo "</tr>";
             }
+        } else {
+            echo "<tr><td colspan='9'>No orders found.</td></tr>";
+        }
       ?>
       </tbody>
      </table>
