@@ -308,12 +308,20 @@ while ($row = $result->fetch_assoc()) {
             window.snap.pay(data.snapToken, {
                 onSuccess: function(result){
                     console.log(result);
+                    window.location.href = 'homepage.php'; 
                 },
                 onPending: function(result){
                     console.log(result);
+                    window.location.href = 'homepage.php'; 
                 },
                 onError: function(result){
                     console.log(result);
+                    window.location.href = 'homepage.php'; 
+                },
+                onClose: function() {
+            
+                
+                window.location.href = 'homepage.php'; 
                 }
             });
         })

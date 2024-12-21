@@ -147,15 +147,26 @@ $params = array(
         'first_name' => $_SESSION['username'],
         'email' => $email,
     ),
-    'item_details' => array_map(function($item) {
-        return array(
-            'id' => $item['productid'],
-            'price' => $item['price'],
-            'quantity' => $item['cart_quantity'],
-            'name' => 'Product ' . $item['productid']
-        );
-    }, $items)
+    'item_details' => array_merge(
+        array_map(function($item) {
+            return array(
+                'id' => $item['productid'],
+                'price' => $item['price'],
+                'quantity' => $item['cart_quantity'],
+                'name' => 'Product ' . $item['productid']
+            );
+        }, $items),
+        [
+            array(
+                'id' => 'shipping_cost',
+                'price' => $shippingCost,
+                'quantity' => 1,
+                'name' => 'Shipping Cost (' . $shipping . ')'
+            )
+        ]
+    )
 );
+
 
 try {
     $snapToken = \Midtrans\Snap::getSnapToken($params);
