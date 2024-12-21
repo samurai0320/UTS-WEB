@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id'], $_POST['st
     $orderId = $conn->real_escape_string($_POST['order_id']);
     $status = $conn->real_escape_string($_POST['status']);
 
-    $validStatuses = ['Pending', 'Processing', 'Shipped', 'Canceled'];
+    $validStatuses = [ 'Processing', "Paid"];
     if (!in_array($status, $validStatuses)) {
         echo "Invalid status.";
         exit;

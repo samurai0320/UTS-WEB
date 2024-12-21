@@ -43,7 +43,7 @@ function getCartItems($conn, $cartId) {
 
 function insertOrder($conn, $userId, $totalAmount, $address, $orderNotes, $shipping) {
     $sql = "INSERT INTO orders (user_id, total_amount, order_date, status, address, information, shipping_service) 
-            VALUES (?, ?, NOW(), 'Pending', ?, ?, ?)";
+            VALUES (?, ?, NOW(), 'Processing', ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("idsss", $userId, $totalAmount, $address, $orderNotes, $shipping);
     $stmt->execute();
@@ -61,10 +61,8 @@ function insertOrderItems($conn, $orderId, $items) {
         $quantity = $item['cart_quantity'];
         $price = $item['price'];
 
-        
         $stmt->execute();
 
-        
         updateProductStock($conn, $productId, $quantity);
     }
 
@@ -79,29 +77,35 @@ function removeCartItems($conn, $cartId) {
 }
 
 function updateProductStock($conn, $productId, $quantitySold) {
-    
     $sql = "UPDATE products SET quantity = quantity - ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $quantitySold, $productId);
     $stmt->execute();
 }
 
+function getUserEmail($conn, $userId) {
+    $sql = "SELECT email FROM users WHERE user_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['email'];
+}
+
 $userId = $_SESSION['user_id'];
 $address = $_POST['address'] ?? '';
 $orderNotes = $_POST['order_notes'] ?? '';
 $shippingCost = $_POST['shipping_options'] ?? 0;
-$shipping = ''; 
+$shipping = '';
 
 if (empty($address)) {
     die("Alamat harus diisi.");
 }
 
 $cartId = getCartId($conn, $userId);
-
-
 list($items, $totalAmount) = getCartItems($conn, $cartId);
-$totalAmount += $shippingCost; 
-
+$totalAmountWithShipping = $totalAmount + $shippingCost; // Add shipping cost to total amount
 
 if ($shippingCost == 50000) {
     $shipping = "Fast";
@@ -110,29 +114,54 @@ if ($shippingCost == 50000) {
 } elseif ($shippingCost == 10000) {
     $shipping = "Hemat";
 } else {
-    $shipping = "Unknown"; 
+    $shipping = "Unknown";
 }
 
 $conn->begin_transaction();
 try {
-    
-    $orderId = insertOrder($conn, $userId, $totalAmount, $address, $orderNotes, $shipping);
-    
-    
+    $orderId = insertOrder($conn, $userId, $totalAmountWithShipping, $address, $orderNotes, $shipping);
     insertOrderItems($conn, $orderId, $items);
-    
-    
     removeCartItems($conn, $cartId);
-
     $conn->commit();
-
-    
-    header("location: homepage.php");
-    exit();
 } catch (Exception $e) {
     $conn->rollback();
     die("Terjadi kesalahan: " . $e->getMessage());
 }
-?>
 
+$email = getUserEmail($conn, $userId);
+
+require_once 'midtrans-php-master/Midtrans.php';
+
+\Midtrans\Config::$serverKey = 'SB-Mid-server-CV_8shkSMu_ueN7eEpLVsE61';
+\Midtrans\Config::$isProduction = false;
+\Midtrans\Config::$isSanitized = true;
+\Midtrans\Config::$is3ds = true;
+
+
+$params = array(
+    'transaction_details' => array(
+        'order_id' => $orderId,
+        'gross_amount' => max($totalAmountWithShipping, 0.01), 
+    ),
+    'customer_details' => array(
+        'first_name' => $_SESSION['username'],
+        'email' => $email,
+    ),
+    'item_details' => array_map(function($item) {
+        return array(
+            'id' => $item['productid'],
+            'price' => $item['price'],
+            'quantity' => $item['cart_quantity'],
+            'name' => 'Product ' . $item['productid']
+        );
+    }, $items)
+);
+
+try {
+    $snapToken = \Midtrans\Snap::getSnapToken($params);
+    echo json_encode(['snapToken' => $snapToken]);
+} catch (Exception $e) {
+    die("Terjadi kesalahan: " . $e->getMessage());
+}
+?>
 

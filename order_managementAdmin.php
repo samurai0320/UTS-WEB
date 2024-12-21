@@ -88,10 +88,9 @@ $orderResults = $conn->query($sql);
                         <form method='POST' action='edit_order.php' class='d-inline'>
                             <input type='hidden' name='order_id' value='{$order['order_id']}'>
                             <select name='status' class='form-select form-select-sm'>
-                                <option value='Pending'>Pending</option>
+                                
                                 <option value='Processing'>Processing</option>
-                                <option value='Shipped'>Shipped</option>
-                                <option value='Canceled'>Canceled</option>
+                                <option value='Paid'>Paid</option>
                             </select>
                             <button type='submit' class='btn btn-success btn-sm'>Update</button>
                         </form>
