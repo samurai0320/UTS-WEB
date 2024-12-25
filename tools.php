@@ -42,18 +42,47 @@ if (isset($_POST['add-to-cart'])) {
 
 function addToCart($productId, $cartId) {
     include 'donnection.php';
+
     
-    $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
-    $result = $conn->query($sql);
-  
-    if ($result->num_rows > 0) {
-        
-        $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = '$cartId' AND productid = '$productId'";
-        $conn->query($sql);
+    $sql = "SELECT quantity FROM products WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $productId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product = $result->fetch_assoc();
+    $stmt->close();
+
+    $availableQuantity = $product['quantity'];
+
+    
+    $sql = "SELECT cart_quantity FROM cart_item WHERE cartid = ? AND productid = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $cartId, $productId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $cartItem = $result->fetch_assoc();
+    $stmt->close();
+
+    $currentCartQuantity = $cartItem ? $cartItem['cart_quantity'] : 0;
+
+    
+    if ($currentCartQuantity >= $availableQuantity) {
+        die(header("Location: homepage.php"));
+    }
+
+    
+    if ($cartItem) {
+        $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = ? AND productid = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $cartId, $productId);
+        $stmt->execute();
+        $stmt->close();
     } else {
-        
-        $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES ('$cartId', '$productId', 1)";
-        $conn->query($sql);
+        $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES (?, ?, 1)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $cartId, $productId);
+        $stmt->execute();
+        $stmt->close();
     }
 }
 
@@ -181,7 +210,7 @@ if (isset($_GET['view-all'])) {
         <a href="homepage.php">Home</a>
         <div class="dropdown">
             <span><strong>Products</strong></span>
-            <div class="dropdown-content">
+            <div class=homepage.php"dropdown-content">
                 <a href="toy.php">Toys</a>
                 <a href="clothes.php">Clothes</a>
                 <a href="tools.php">Tools</a>

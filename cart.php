@@ -12,13 +12,24 @@ if (isset($_POST['updateQuantity'])) {
     $cartId = $_POST['cartId'];
     $productId = $_POST['productId'];
     $quantity = $_POST['quantity'];
+    $sql = "SELECT quantity FROM products WHERE id = '$productId'";
+    $result = $conn->query($sql);
+    $product = $result->fetch_assoc();
+    $availableQuantity = $product['quantity'];
 
-    if ($quantity <= 0) {
+    
+    if ($quantity > $availableQuantity) {
+        
+        die(header("Location: cart.php"));
+    }
+
+    elseif($quantity <= 0) {
         $sql = "DELETE FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
         $conn->query($sql);
     } else {
         updateCartQuantity($cartId, $productId, $quantity);
     }
+
 
     $sql = "SELECT SUM(p.price * ci.cart_quantity) AS total_subtotal FROM cart_item ci INNER JOIN products p ON ci.productid = p.id WHERE ci.cartid = '$cartId'";
     $result = $conn->query($sql);
