@@ -176,12 +176,12 @@ $random = rand(9999, 1000);
 require_once 'vendor/autoload.php';
 
 
-// init configuration
+
 $clientID = '313345001089-fg1dt61d1h5rn1dlnq3d001oevj9943j.apps.googleusercontent.com';
 $clientSecret = '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';
 $redirectUri = 'http://localhost/UTS/log-in.php';
 
-// create Client Request to access Google API
+
 $client = new Google_Client();
 $client->setPrompt("select_account");
 $client->setClientId($clientID);
@@ -190,12 +190,12 @@ $client->setRedirectUri($redirectUri);
 $client->addScope("email");
 $client->addScope("profile");
 
-// authenticate code from Google OAuth Flow
+
 if (isset($_GET['code'])) {
   $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
   $client->setAccessToken($token['access_token']);
 
-  // get profile info
+  
   $google_oauth = new Google_Service_Oauth2($client);
   $google_account_info = $google_oauth->userinfo_v2_me->get();
   $email =  $google_account_info->email;
@@ -225,13 +225,13 @@ if (isset($_GET['code'])) {
 
 <div class="Template1LogIn">
   <div class="DivSection">
-    <!-- Header Text -->
+    
     <div class="Header">
       <h1>Log In to your Account</h1>
       <p>WELCOME BACK</p>
     </div>
 
-    <!-- Login Form -->
+   
     <form method="POST" class="Form" style="display: flex; flex-direction: column; gap: 20px;">
       <div class="InputGroup">
         <label for="email">Email</label>
@@ -260,14 +260,14 @@ if (isset($_GET['code'])) {
       <button type="submit" name="submit" class="MainButton">CONTINUE</button>
     </form>
 
-    <!-- Divider -->
+    
     <div class="Divider">
       <hr />
       <span>Or</span>
       <hr />
     </div>
 
-    <!-- Social Login Buttons -->
+    
      
      <a href="<?php echo $client->createAuthUrl() ?>">
     <button type="button" class="google-button">
@@ -275,7 +275,7 @@ if (isset($_GET['code'])) {
     </button> 
   </a>
 
-    <!-- Sign Up Link -->
+    
     <div class="SignupLink">
       New User? <a href="regis.php">SIGN UP HERE</a>
     </div>
