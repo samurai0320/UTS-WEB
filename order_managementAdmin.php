@@ -27,6 +27,15 @@ $orderResults = $conn->query($sql);
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="OrderManagement.css" rel="stylesheet"/>
+  <style>
+    .search-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #4B3EC4;
+            height: 40px;
+        }
+  </style>
   
 </head>
 
@@ -39,12 +48,15 @@ $orderResults = $conn->query($sql);
     <div class="nav">
         <a href="dashboard-admin.php" class="nav-link">Home</a>
         <a href="halamankelolaproduk.php" class="nav-link">Products</a>
+        <a href="order_managementAdmin.php" class="nav-link">Orders</a>
     </div>
     <div class="user">
         <span>Welcome admin</span>
         <i class="fas fa-user-circle"></i>
     </div>
   </div>
+
+  <div class ="search-bar"></div>
 
   <div class="content">
     <h2 class="fw-bold">Order Management</h2>

@@ -56,7 +56,6 @@ function insertOrderItems($conn, $orderId, $items) {
     $stmt = $conn->prepare($sql);
 
     $stmt->bind_param("iiid", $orderId, $productId, $quantity, $price);
-
     foreach ($items as $item) {
         $productId = $item['productid'];
         $quantity = $item['cart_quantity'];

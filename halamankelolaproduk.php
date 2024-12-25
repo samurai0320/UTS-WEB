@@ -1,7 +1,6 @@
 <?php
 include 'donnection.php'; 
 
-
 $sql = "SELECT * FROM products";
 $result = $conn->query($sql);
 ?>
@@ -11,31 +10,69 @@ $result = $conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="logo.gif" type="image/x-icon">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="styles.css" rel="stylesheet"/>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #e0e0e0;
             margin: 0;
+            padding: 0;
+            background-color: #E1E3EB;
         }
-        .navbar {
-            background-color: #87CEEB; 
-            color: white;
-            padding: 15px 20px;
+        .header {
+    background-color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.header .logo {
+    display: flex;
+    align-items: center;
+}
+
+.header .logo img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.header .nav {
+    display: flex;
+    align-items: center;
+}
+
+.header .nav a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.header .user {
+    display: flex;
+    align-items: center;
+}
+
+.header .user span {
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+.header .user i {
+    font-size: 24px;
+}
+        .search-bar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            width: 100%;
+            padding: 10px 20px;
+            background-color: #4B3EC4;
+            height: 40px;
         }
-        .navbar a {
-            color: white;
-            margin-left: 20px;
-            text-decoration: none;
-        }
-        .container {
-            width: 100%;
-            margin: 0;
+        .content {
+            padding: 20px;
         }
         .admin-table {
             width: 100%;
@@ -44,11 +81,11 @@ $result = $conn->query($sql);
         }
         .admin-table th,
         .admin-table td {
-            border: 1px solid #000000; 
+            border: 1px solid #000000;
             padding: 10px;
         }
         .admin-table th {
-            background-color: #87CEEB; 
+            background-color: #4B3EC4;
             color: white;
             text-align: left;
         }
@@ -94,24 +131,35 @@ $result = $conn->query($sql);
 </head>
 <body>
 
-<div class="navbar">
-    <span>Admin Panel</span>
-    <a href="order_managementAdmin.php">Order</a>
-    <a href="log-in.php" style="color: white;">Logout</a>
-</div>
+<div class="header">
+    <div class="logo">
+        <img src="logo.jpg" alt="Logo" height="40" width="40"/>
+        <span>QuillBox</span>
+    </div>
+    <div class="nav">
+        <a href="dashboard-admin.php" class="nav-link">Home</a>
+        <a href="halamankelolaproduk.php" class="nav-link">Products</a>
+        <a href="order_managementAdmin.php" class="nav-link">Orders</a>
+    </div>
+    <div class="user">
+        <span>Welcome admin</span>
+        <i class="fas fa-user-circle"></i>
+    </div>
+  </div>
 
-<div class="container">
-    
+<div class="search-bar"></div>
+
+<div class="content">
     <form action="add_product.php" method="POST" enctype="multipart/form-data">
         <table class="admin-table">
             <thead>
                 <tr>
                     <th>Image</th>
                     <th>Name</th>
-                    <th>description</th>
+                    <th>Description</th>
                     <th>Quantity</th>
                     <th>Price</th>
-                    <th>category</th>
+                    <th>Category</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -124,7 +172,7 @@ $result = $conn->query($sql);
                         <input type="text" name="name" placeholder="Product Name" required>
                     </td>
                     <td>
-                        <input type="text" name="description" placeholder="description" required>
+                        <input type="text" name="description" placeholder="Description" required>
                     </td>
                     <td>
                         <input type="number" name="quantity" placeholder="Quantity" required>
@@ -133,7 +181,7 @@ $result = $conn->query($sql);
                         <input type="number" step="0.01" name="price" placeholder="Price" required>
                     </td>
                     <td>
-                        <input type="text" name="category" placeholder="category" required>
+                        <input type="text" name="category" placeholder="Category" required>
                     </td>
                     <td>
                         <button type="submit" name="submit" class="add-item-btn">Add Product</button>
@@ -143,25 +191,23 @@ $result = $conn->query($sql);
         </table>
     </form>
 
-    
-    <h2 style="margin-top: 20px;">Existing Products</h2>
+    <h2 class="fw-bold" style="margin-top: 20px;">Existing Products</h2>
     <table class="admin-table">
         <thead>
             <tr>
                 <th>Image</th>
                 <th>ID</th>
                 <th>Name</th>
-                <th>description</th>
+                <th>Description</th>
                 <th>Quantity</th>
                 <th>Price</th>
-                <th>category</th>
+                <th>Category</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <?php
             if ($result->num_rows > 0) {
-                
                 while ($row = $result->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td><img src='" . htmlspecialchars($row['image']) . "' alt='Product Image'></td>";
@@ -184,16 +230,17 @@ $result = $conn->query($sql);
                     echo "</tr>";
                 }
             } else {
-                echo "<tr><td colspan='6'>no proudct found</td></tr>";
+                echo "<tr><td colspan='6'>No products found</td></tr>";
             }
             ?>
         </tbody>
     </table>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
 <?php
-$conn->close(); 
+$conn->close();
 ?>
