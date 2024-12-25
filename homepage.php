@@ -65,6 +65,20 @@ if (isset($_POST['toggle-wishlist'])) {
 
 function addToCart($productId, $cartId) {
     include 'donnection.php';
+
+    $sql = "Select quantity FROM products WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $productId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($product['quantity'] == 0) {
+
+        return;
+        
+    }
     
     $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
     $result = $conn->query($sql);
@@ -250,6 +264,7 @@ if (isset($_GET['view-all'])) {
         padding-right: 20px;
     }
     </style>
+    
 </head>
 <body>
     <header>
@@ -325,6 +340,7 @@ if (isset($_GET['view-all'])) {
             <button class="view-all" name="view-all">See All Products</button></form>
         </section>
     </main>
+    
 </body>
 </html>
 
