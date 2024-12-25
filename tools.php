@@ -117,7 +117,7 @@ if (isset($_GET['view-all'])) {
     <link rel="stylesheet" href="style.css">
     <style>
 
-.dropdown {
+    .dropdown {
         position: relative;
         display: inline-block;
     }
@@ -199,6 +199,7 @@ if (isset($_GET['view-all'])) {
 }
 
         
+    
     </style>
 </head>
 <body>
@@ -210,7 +211,7 @@ if (isset($_GET['view-all'])) {
         <a href="homepage.php">Home</a>
         <div class="dropdown">
             <span><strong>Products</strong></span>
-            <div class=homepage.php"dropdown-content">
+            <div class=dropdown-content>
                 <a href="toy.php">Toys</a>
                 <a href="clothes.php">Clothes</a>
                 <a href="tools.php">Tools</a>
@@ -223,10 +224,11 @@ if (isset($_GET['view-all'])) {
     <div class="search-bar-container">
         <form method="GET" action="">
             <select name="category" class="search-category" onchange="redirectToCategory(this)">
-                <option value="">All Categories</option>
+                <option value="tools.php">Tools</option>
+                <option value="homepage.php">All Categories</option>
                 <option value="toy.php">Toys</option>
                 <option value="clothes.php">Clothes</option>
-                <option value="tools.php">Tools</option>
+                
             </select>
             <input type="text" name="search" placeholder="Search anything..." class="search-input">
             <button type="submit" class="search-btn">Search</button>

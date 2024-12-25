@@ -224,8 +224,8 @@ if (isset($_GET['view-all'])) {
     <div class="search-bar-container">
         <form method="GET" action="">
             <select name="category" class="search-category" onchange="redirectToCategory(this)">
-                <option value="homepage.php">All Categories</option>
                 <option value="toy.php">Toys</option>
+                <option value="homepage.php">All Categories</option>
                 <option value="clothes.php">Clothes</option>
                 <option value="tools.php">Tools</option>
             </select>

@@ -18,6 +18,7 @@ $full_name = $data['full_name'];
 $address = $data['address'];
 $city = $data['city'];
 $phone_number = $data['phone_number'];
+$profile_picture = $data['profile_picture'];
 
 function updateAccountCredentials($username, $email, $password, $userId, $full_name, $address, $city, $phone_number) {
     include 'donnection.php';
@@ -109,15 +110,47 @@ if (isset($_POST['delete-wishlist'])) {
 }
 function addToCart($productId, $cartId) {
     include 'donnection.php';
-    $sql = "SELECT * FROM cart_item WHERE cartid = '$cartId' AND productid = '$productId'";
-    $result = $conn->query($sql);
 
-    if ($result->num_rows > 0) {
-        $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = '$cartId' AND productid = '$productId'";
-        $conn->query($sql);
+    
+    $sql = "SELECT quantity FROM products WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $productId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product = $result->fetch_assoc();
+    $stmt->close();
+
+    $availableQuantity = $product['quantity'];
+
+    
+    $sql = "SELECT cart_quantity FROM cart_item WHERE cartid = ? AND productid = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $cartId, $productId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $cartItem = $result->fetch_assoc();
+    $stmt->close();
+
+    $currentCartQuantity = $cartItem ? $cartItem['cart_quantity'] : 0;
+
+    
+    if ($currentCartQuantity >= $availableQuantity) {
+        die(header("Location: wishlist.php"));
+    }
+
+    
+    if ($cartItem) {
+        $sql = "UPDATE cart_item SET cart_quantity = cart_quantity + 1 WHERE cartid = ? AND productid = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $cartId, $productId);
+        $stmt->execute();
+        $stmt->close();
     } else {
-        $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES ('$cartId', '$productId', 1)";
-        $conn->query($sql);
+        $sql = "INSERT INTO cart_item (cartid, productid, cart_quantity) VALUES (?, ?, 1)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $cartId, $productId);
+        $stmt->execute();
+        $stmt->close();
     }
 }
 
@@ -246,12 +279,12 @@ if (isset($_GET['view-all'])) {
         </nav>
         <section class="profile-container">
             <div class="sidebar">
-                <img src="ayaka.jpg" alt="User Profile Picture" class="profile-pic">
+                <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile Picture" class="profile-pic">
                 <h2><?php echo $username; ?></h2>
                 <p><?php echo $email; ?></p>
                 <a class="menu-item" href="profile.php">Account info</a>
                 <a class="menu-item" href="wishlist.php">wishlist</a>
-                <a class="menu-item" href="orders.php">orders</a>
+                <a class="menu-item" href="OrderManagementCust.php">orders</a>
                 <a class="menu-item" href="log-in.php">Logout</a>
             </div>
             <div class="account-info">

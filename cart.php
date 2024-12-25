@@ -68,7 +68,7 @@ while ($row = $result->fetch_assoc()) {
             <a href="cart.php">Cart</a>
         </div>
         <div class="user-profile">
-            <span>Welcome, New User</span>
+            <span>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
             <div class="user-icon"><a href="profile.php">👤</a></div>
         </div>
     </div>
