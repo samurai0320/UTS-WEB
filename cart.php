@@ -64,7 +64,7 @@ while ($row = $result->fetch_assoc()) {
 </header>
 
 <nav class="breadcrumb">
-    <a href="homepage.php" style="color: #4B3EC4;">Home</a> / <a style="color: #4B3EC4;">Pages</a> / <span>Cart</span>
+    <a href="homepage.php" style="color: #4B3EC4;">Home</a>  / <span>Cart</span>
 </nav>
 
 <div class="container">
@@ -116,9 +116,9 @@ while ($row = $result->fetch_assoc()) {
 <div class="order-summary">
     <h3>Order Summary</h3>
     <p>Sub Total: <span>Rp<?php echo $totalSubtotal; ?></span></p>
-    <p>Shipping estimate: <span>Rp25.000</span></p>
+    <p>Shipping estimate: <span>Rp27.000</span></p>
     <p>Tax estimate: <span>Rp12.000</span></p>
-    <p><strong>ORDER TOTAL: <span>Rp<?php echo $totalSubtotal + 25000 + 12000; ?></strong></span></p>
+    <p><strong>ORDER TOTAL: <span>Rp<?php echo $totalSubtotal + 27000 + 12000; ?></strong></span></p>
     <form action="checkout.php" method="post" id="checkoutForm">
     <input type="hidden" name="selectedItems" id="selectedItems">
     <button type="submit" style="background-color: #4B3EC4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">CHECKOUT</button>

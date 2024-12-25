@@ -32,10 +32,11 @@ function getCartItems($conn, $cartId) {
 
     $items = [];
     $totalAmount = 0;
+    $tax = 12000;
 
     while ($item = $result->fetch_assoc()) {
         $items[] = $item;
-        $totalAmount += $item['cart_quantity'] * $item['price'];
+        $totalAmount += $item['cart_quantity'] * $item['price']+$tax;
     }
 
     return [$items, $totalAmount];
@@ -105,7 +106,7 @@ if (empty($address)) {
 
 $cartId = getCartId($conn, $userId);
 list($items, $totalAmount) = getCartItems($conn, $cartId);
-$totalAmountWithShipping = $totalAmount + $shippingCost; // Add shipping cost to total amount
+$totalAmountWithShipping = $totalAmount + $shippingCost+12000; 
 
 if ($shippingCost == 50000) {
     $shipping = "Fast";
@@ -130,6 +131,7 @@ try {
 
 $email = getUserEmail($conn, $userId);
 
+
 require_once 'midtrans-php-master/Midtrans.php';
 
 \Midtrans\Config::$serverKey = 'SB-Mid-server-CV_8shkSMu_ueN7eEpLVsE61';
@@ -137,7 +139,7 @@ require_once 'midtrans-php-master/Midtrans.php';
 \Midtrans\Config::$isSanitized = true;
 \Midtrans\Config::$is3ds = true;
 
-
+$totalAmountWithShipping+=12000;
 $params = array(
     'transaction_details' => array(
         'order_id' => $orderId,
@@ -162,8 +164,16 @@ $params = array(
                 'price' => $shippingCost,
                 'quantity' => 1,
                 'name' => 'Shipping Cost (' . $shipping . ')'
+            ),
+            array(
+                'id' => 'tax',
+                'price' => 12000, 
+                'quantity' => 1,
+                'name' => 'Tax (12000)'
             )
+            
         ]
+        
     )
 );
 

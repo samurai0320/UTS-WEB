@@ -95,7 +95,7 @@ if (isset($_POST['view-all'])) {
 
     <main class="profile-page">
         <nav class="breadcrumb">
-            <a href="homepage.php">Home</a> / <a>pages</a> / <span>profile</span>
+            <a href="homepage.php">Home</a> / <span>profile</span>
         </nav>
 
         <section class="profile-container">

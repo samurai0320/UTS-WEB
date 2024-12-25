@@ -34,6 +34,7 @@ $cartItems = array();
 while ($row = $result->fetch_assoc()) {
     $cartItems[] = $row;
 }
+$tax = 12000;
 
 ?>
 
@@ -264,11 +265,17 @@ while ($row = $result->fetch_assoc()) {
                 <div class="card">
                     <div class="order-summary mb-4">
                         <div class="d-flex justify-content-between">
-                            <p>Sub Total</p>
-                            <p id="subtotal" data-value="<?php echo $totalSubtotal; ?>">
-                                Rp<?php echo number_format($totalSubtotal, 0, ',', '.'); ?>
+                            <p>Sub Total + Tax</p>
+                            
+                            <p id="subtotal" data-value="<?php echo $totalSubtotal+$tax; ?>">
+                                Rp<?php echo number_format($totalSubtotal+$tax, 0, ',', '.'); ?>
                             </p>
+                            
                         </div>
+                        
+                            
+                            
+                        
                         <input type="hidden" id="subtotal-hidden" name="subtotal" value="<?php echo $totalSubtotal; ?>">
                         <div class="d-flex justify-content-between align-items-center">
                             <p>Shipping</p>
@@ -282,9 +289,9 @@ while ($row = $result->fetch_assoc()) {
                         <div class="d-flex justify-content-between order-total">
                             <p>Order Total</p>
                             <p id="order-total" class="text-success">
-                                Rp<?php echo number_format($totalSubtotal + 27000, 0, ',', '.'); ?>
+                                Rp<?php echo number_format($totalSubtotal+$tax + 27000, 0, ',', '.'); ?>
                             </p>
-                            <input type="hidden" id="order-total-hidden" name="order_total" value="<?php echo $totalSubtotal + 27000; ?>">
+                            <input type="hidden" id="order-total-hidden" name="order_total" value="<?php echo $totalSubtotal+$tax + 27000; ?>">
                         </div>
                     </div>
                     <button id="pay-button" type="button" class="btn btn-primary w-100">Place Order</button>
@@ -308,7 +315,7 @@ while ($row = $result->fetch_assoc()) {
             window.snap.pay(data.snapToken, {
                 onSuccess: function(result){
                     console.log(result);
-                    window.location.href = 'homepage.php'; 
+                    window.location.href = 'homepage.php';
                 },
                 onPending: function(result){
                     console.log(result);
