@@ -276,6 +276,7 @@ $total_processing_orders = $row['total_processing_orders'];
         <a href="dashboard-admin.php" class="nav-link">Home</a>
         <a href="halamankelolaproduk.php" class="nav-link">Products</a>
         <a href="order_managementAdmin.php" class="nav-link">Orders</a>
+        <a href="log-in.php" class="nav-link">Logout</a>
     </div>
     <div class="user">
         <span>Welcome admin</span>
